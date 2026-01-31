@@ -170,15 +170,15 @@ async function seedTestData() {
     await set(ref(database, `invoices/${testInvoice.id}`), testInvoice);
     console.log(`  ✅ Added invoice: ${testInvoice.id} - $${testInvoice.amount.toLocaleString()}`);
     
-    // 6. Create test notifications
+    // 6. Create test notifications (for client)
     console.log('\nCreating test notifications...');
     const testNotifications = [
       {
         id: 'notif-001',
         userId: testClient.id,
         title: 'Milestone Completed',
-        message: 'Design Phase milestone has been completed ahead of schedule!',
-        type: 'success',
+        description: 'Design Phase milestone has been completed ahead of schedule!',
+        type: 'project_update',
         read: false,
         createdAt: Date.now() - 86400000 * 2
       },
@@ -186,10 +186,47 @@ async function seedTestData() {
         id: 'notif-002',
         userId: testClient.id,
         title: 'Project Update',
-        message: 'Development phase is now 65% complete. On track for March 1st deadline.',
-        type: 'info',
+        description: 'Development phase is now 65% complete. On track for March 1st deadline.',
+        type: 'project_update',
         read: false,
         createdAt: Date.now() - 86400000
+      },
+      {
+        id: 'notif-003',
+        userId: testClient.id,
+        title: 'Payment Received',
+        description: 'Payment for Phase 1 has been received. Thank you!',
+        type: 'payment',
+        read: true,
+        createdAt: Date.now() - 86400000 * 10
+      },
+      // Admin notifications
+      {
+        id: 'notif-admin-001',
+        userId: 'admin',
+        title: 'New Client Registered',
+        description: 'Tech Innovations Inc has been added to the portal.',
+        type: 'system',
+        read: false,
+        createdAt: Date.now() - 86400000 * 15
+      },
+      {
+        id: 'notif-admin-002',
+        userId: 'admin',
+        title: 'Project Milestone Update',
+        description: 'Website Redesign Project - Design Phase completed.',
+        type: 'project_update',
+        read: false,
+        createdAt: Date.now() - 86400000 * 2
+      },
+      {
+        id: 'notif-admin-003',
+        userId: 'admin',
+        title: 'Payment Confirmation',
+        description: 'Invoice INV-001234 has been marked as paid.',
+        type: 'payment',
+        read: true,
+        createdAt: Date.now() - 86400000 * 10
       }
     ];
     
