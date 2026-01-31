@@ -55,3 +55,11 @@ export { app, database, auth };
 export const isFirebaseConfigured = (): boolean => {
   return firebaseConfig.apiKey !== 'YOUR_API_KEY';
 };
+
+// Authorized admin emails
+export const AUTHORIZED_ADMINS = ['abirsabirhossain@gmail.com'];
+
+// Check if email is authorized admin
+export const isAuthorizedAdmin = (email: string | null): boolean => {
+  return email ? AUTHORIZED_ADMINS.includes(email.toLowerCase()) : false;
+};
