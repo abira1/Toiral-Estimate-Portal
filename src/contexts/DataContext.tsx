@@ -91,23 +91,20 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 // ==========================================
 export function DataProvider({ children }: {children: ReactNode;}) {
   const isFirebaseReady = isFirebaseConfigured();
-  // State
-  const [clients, setClients] = useState<Client[]>(
-    isFirebaseReady ? [] : MOCK_CLIENTS
-  );
-  const [clientsLoading, setClientsLoading] = useState(isFirebaseReady);
-  const [projects, setProjects] = useState<Project[]>(
-    isFirebaseReady ? [] : MOCK_PROJECTS
-  );
-  const [projectsLoading, setProjectsLoading] = useState(isFirebaseReady);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(
-    isFirebaseReady ? [] : MOCK_TEAM_MEMBERS
-  );
-  const [teamLoading, setTeamLoading] = useState(isFirebaseReady);
-  const [invoices, setInvoices] = useState<Invoice[]>(
-    isFirebaseReady ? [] : MOCK_INVOICES
-  );
-  const [invoicesLoading, setInvoicesLoading] = useState(isFirebaseReady);
+
+  // State - Initialize all as empty arrays since we're using real Firebase data
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [teamLoading, setTeamLoading] = useState(true);
+  
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(true);
+  
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   // ==========================================
