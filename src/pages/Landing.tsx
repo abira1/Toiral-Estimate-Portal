@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Mail, Monitor, PartyPopper, Sparkles } from 'lucide-react';
+import { ArrowRight, Mail, Monitor, PartyPopper, Sparkles, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { StarDoodle } from '../components/doodles/StarDoodle';
 import { SpringDoodle } from '../components/doodles/SpringDoodle';
 import { ScribbleDoodle } from '../components/doodles/ScribbleDoodle';
+import { useAuth } from '../contexts/AuthContext';
 type JourneyStep = {
   icon: React.ReactNode;
   label: string;
