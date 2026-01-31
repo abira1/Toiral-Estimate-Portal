@@ -10,7 +10,7 @@ import {
   onAuthStateChanged,
   User } from
 'firebase/auth';
-import { auth, isFirebaseConfigured } from '../lib/firebase';
+import { auth, isFirebaseConfigured, isAuthorizedAdmin } from '../lib/firebase';
 import { clientService } from '../lib/firebaseServices';
 import { AdminUser, Client, ClientSession } from '../types';
 interface AuthContextType {
