@@ -714,6 +714,24 @@ export const notificationService = {
       console.error('Error deleting notification:', error);
       return { success: false, error: 'Failed to delete notification' };
     }
+  },
+
+  // Subscribe to notifications (real-time updates)
+  subscribe(callback: (notifications: Notification[]) => void): () => void {
+    const notificationsRef = ref(database, 'notifications');
+
+    onValue(notificationsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const notifications = Object.values(snapshot.val()) as Notification[];
+        // Sort by createdAt in descending order (newest first)
+        notifications.sort((a, b) => b.createdAt - a.createdAt);
+        callback(notifications);
+      } else {
+        callback([]);
+      }
+    });
+
+    return () => off(notificationsRef);
   }
 };
 
