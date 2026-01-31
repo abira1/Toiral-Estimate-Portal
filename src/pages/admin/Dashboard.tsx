@@ -64,188 +64,125 @@ const STATUS_CONFIG = {
     description: 'Behind schedule'
   }
 };
-// Mock projects data (in real app, this would come from API/state)
-const ALL_PROJECTS = [
-{
-  id: 1,
-  name: 'E-commerce Redesign',
-  client: 'Nike',
-  status: 'In Progress',
-  progress: 75
-},
-{
-  id: 2,
-  name: 'Mobile App MVP',
-  client: 'Uber',
-  status: 'Delayed',
-  progress: 30
-},
-{
-  id: 3,
-  name: 'Marketing Site',
-  client: 'Airbnb',
-  status: 'Review',
-  progress: 90
-},
-{
-  id: 4,
-  name: 'Internal Dashboard',
-  client: 'Netflix',
-  status: 'Planning',
-  progress: 15
-},
-{
-  id: 5,
-  name: 'Brand Refresh',
-  client: 'Spotify',
-  status: 'In Progress',
-  progress: 45
-},
-{
-  id: 6,
-  name: 'API Integration',
-  client: 'Stripe',
-  status: 'In Progress',
-  progress: 60
-},
-{
-  id: 7,
-  name: 'Landing Page',
-  client: 'Dropbox',
-  status: 'Completed',
-  progress: 100
-},
-{
-  id: 8,
-  name: 'Mobile Redesign',
-  client: 'Slack',
-  status: 'Completed',
-  progress: 100
-},
-{
-  id: 9,
-  name: 'Dashboard v2',
-  client: 'Notion',
-  status: 'Review',
-  progress: 85
-},
-{
-  id: 10,
-  name: 'Checkout Flow',
-  client: 'Shopify',
-  status: 'In Progress',
-  progress: 55
-},
-{
-  id: 11,
-  name: 'Analytics Portal',
-  client: 'Mixpanel',
-  status: 'Planning',
-  progress: 10
-},
-{
-  id: 12,
-  name: 'User Portal',
-  client: 'Zendesk',
-  status: 'Completed',
-  progress: 100
-}];
 
 export function AdminDashboard() {
   const navigate = useNavigate();
+  const { adminUser } = useAuth();
+  const { 
+    clients, 
+    clientsLoading, 
+    projects, 
+    projectsLoading,
+    invoices,
+    invoicesLoading 
+  } = useData();
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const stats = [
-  {
-    label: 'Total Clients',
-    value: '124',
-    icon: Users,
-    color: 'text-blue-500',
-    bg: 'bg-blue-100'
-  },
-  {
-    label: 'Active Projects',
-    value: '12',
-    icon: Briefcase,
-    color: 'text-toiral-primary',
-    bg: 'bg-toiral-light/30'
-  },
-  {
-    label: 'Completed',
-    value: '48',
-    icon: CheckCircle,
-    color: 'text-green-500',
-    bg: 'bg-green-100'
-  },
-  {
-    label: 'Revenue',
-    value: '$84k',
-    icon: DollarSign,
-    color: 'text-purple-500',
-    bg: 'bg-purple-100'
-  }];
 
-  const revenueData = [
-  {
-    label: 'May',
-    value: 45000
-  },
-  {
-    label: 'Jun',
-    value: 52000
-  },
-  {
-    label: 'Jul',
-    value: 48000
-  },
-  {
-    label: 'Aug',
-    value: 61000
-  },
-  {
-    label: 'Sep',
-    value: 55000
-  },
-  {
-    label: 'Oct',
-    value: 84000
-  }];
+  // Show loading state
+  if (clientsLoading || projectsLoading || invoicesLoading) {
+    return (
+      <DashboardLayout userRole="admin">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <MorphLoading />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Calculate statistics from real data
+  const activeProjects = projects.filter(p => p.status === 'In Progress' || p.status === 'Planning' || p.status === 'Review');
+  const completedProjects = projects.filter(p => p.status === 'Completed');
+  const totalRevenue = invoices
+    .filter(inv => inv.status === 'Paid')
+    .reduce((sum, inv) => sum + inv.amount, 0);
+
+  const stats = [
+    {
+      label: 'Total Clients',
+      value: clients.length.toString(),
+      icon: Users,
+      color: 'text-blue-500',
+      bg: 'bg-blue-100'
+    },
+    {
+      label: 'Active Projects',
+      value: activeProjects.length.toString(),
+      icon: Briefcase,
+      color: 'text-toiral-primary',
+      bg: 'bg-toiral-light/30'
+    },
+    {
+      label: 'Completed',
+      value: completedProjects.length.toString(),
+      icon: CheckCircle,
+      color: 'text-green-500',
+      bg: 'bg-green-100'
+    },
+    {
+      label: 'Revenue',
+      value: `$${(totalRevenue / 1000).toFixed(0)}k`,
+      icon: DollarSign,
+      color: 'text-purple-500',
+      bg: 'bg-purple-100'
+    }
+  ];
+
+  // Calculate revenue data (last 6 months)
+  const revenueData = Array.from({ length: 6 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - (5 - i));
+    const monthInvoices = invoices.filter(inv => {
+      const invDate = new Date(inv.issuedDate);
+      return invDate.getMonth() === date.getMonth() && 
+             invDate.getFullYear() === date.getFullYear() &&
+             inv.status === 'Paid';
+    });
+    return {
+      label: date.toLocaleString('default', { month: 'short' }),
+      value: monthInvoices.reduce((sum, inv) => sum + inv.amount, 0)
+    };
+  });
 
   // Calculate status counts from projects
-  const statusCounts = ALL_PROJECTS.reduce(
+  const statusCounts = projects.reduce(
     (acc, project) => {
       acc[project.status] = (acc[project.status] || 0) + 1;
       return acc;
     },
     {} as Record<string, number>
   );
-  const totalProjects = ALL_PROJECTS.length;
+  
+  const totalProjects = projects.length;
+  
   // Status data for display
   const projectStatusData = [
-  {
-    label: 'Planning',
-    value: statusCounts['Planning'] || 0
-  },
-  {
-    label: 'In Progress',
-    value: statusCounts['In Progress'] || 0
-  },
-  {
-    label: 'Review',
-    value: statusCounts['Review'] || 0
-  },
-  {
-    label: 'Completed',
-    value: statusCounts['Completed'] || 0
-  },
-  {
-    label: 'Delayed',
-    value: statusCounts['Delayed'] || 0
-  }].
-  filter((item) => item.value > 0);
+    {
+      label: 'Planning',
+      value: statusCounts['Planning'] || 0
+    },
+    {
+      label: 'In Progress',
+      value: statusCounts['In Progress'] || 0
+    },
+    {
+      label: 'Review',
+      value: statusCounts['Review'] || 0
+    },
+    {
+      label: 'Completed',
+      value: statusCounts['Completed'] || 0
+    },
+    {
+      label: 'Delayed',
+      value: statusCounts['Delayed'] || 0
+    }
+  ].filter((item) => item.value > 0);
+  
   // Get filtered projects based on selected status
-  const filteredProjects = selectedStatus ?
-  ALL_PROJECTS.filter((p) => p.status === selectedStatus) :
-  ALL_PROJECTS.filter((p) => p.status !== 'Completed').slice(0, 3);
+  const filteredProjects = selectedStatus
+    ? projects.filter((p) => p.status === selectedStatus)
+    : projects.filter((p) => p.status !== 'Completed').slice(0, 3);
+  
   const handleStatusClick = (status: string) => {
     if (selectedStatus === status) {
       setSelectedStatus(null);
@@ -253,12 +190,19 @@ export function AdminDashboard() {
       setSelectedStatus(status);
     }
   };
+  
   const handleViewAllProjects = () => {
     if (selectedStatus) {
       navigate(`/admin/projects?status=${encodeURIComponent(selectedStatus)}`);
     } else {
       navigate('/admin/projects');
     }
+  };
+
+  // Get client name by ID
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client?.name || 'Unknown Client';
   };
   return (
     <DashboardLayout userRole="admin">
