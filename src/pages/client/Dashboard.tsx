@@ -264,13 +264,15 @@ export function ClientDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               variant="outline"
+              onClick={() => navigate('/client/reports')}
               className="h-auto py-6 flex flex-col gap-2 items-center justify-center border-dashed">
 
               <FileText className="w-6 h-6" />
-              <span>Review Quotation</span>
+              <span>View Reports</span>
             </Button>
             <Button
               variant="outline"
+              onClick={() => window.location.href = 'mailto:abirsabirhossain@gmail.com'}
               className="h-auto py-6 flex flex-col gap-2 items-center justify-center border-dashed">
 
               <MessageSquare className="w-6 h-6" />
@@ -278,10 +280,19 @@ export function ClientDashboard() {
             </Button>
             <Button
               variant="outline"
+              onClick={() => navigate(`/client/project/${project.id}`)}
               className="h-auto py-6 flex flex-col gap-2 items-center justify-center border-dashed">
 
               <CheckCircle className="w-6 h-6" />
-              <span>Approve Phase</span>
+              <span>View Project</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={logoutClient}
+              className="h-auto py-6 flex flex-col gap-2 items-center justify-center border-dashed">
+
+              <ArrowRight className="w-6 h-6" />
+              <span>Logout</span>
             </Button>
           </div>
         </div>
