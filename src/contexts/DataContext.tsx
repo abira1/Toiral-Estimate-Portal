@@ -253,33 +253,18 @@ export function DataProvider({ children }: {children: ReactNode;}) {
   const createInvoice = useCallback(
     async (invoice: Omit<Invoice, 'id' | 'createdAt'>): Promise<boolean> => {
       if (!isFirebaseReady) {
-        const newInvoice: Invoice = {
-          ...invoice,
-          id: `INV-${String(Date.now()).slice(-6)}`,
-          createdAt: Date.now()
-        };
-        setInvoices((prev) => [...prev, newInvoice]);
-        return true;
+        return false;
       }
       const response = await invoiceService.create(invoice);
       return response.success;
     },
     [isFirebaseReady]
   );
+
   const updateInvoiceStatus = useCallback(
     async (invoiceId: string, status: Invoice['status']): Promise<boolean> => {
       if (!isFirebaseReady) {
-        setInvoices((prev) =>
-        prev.map((i) =>
-        i.id === invoiceId ?
-        {
-          ...i,
-          status
-        } :
-        i
-        )
-        );
-        return true;
+        return false;
       }
       const response = await invoiceService.updateStatus(invoiceId, status);
       return response.success;
