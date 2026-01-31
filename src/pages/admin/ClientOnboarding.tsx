@@ -14,8 +14,8 @@ import {
   Share2,
   Send,
   Check,
-  Key } from
-'lucide-react';
+  Key
+} from 'lucide-react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -23,55 +23,35 @@ import { Input } from '../../components/ui/Input';
 import { Stepper } from '../../components/ui/Stepper';
 import { TeamMemberCard } from '../../components/ui/TeamMemberCard';
 import { Badge } from '../../components/ui/Badge';
-const STEPS = [
-{
-  label: 'Client Details',
-  description: 'Basic information'
-},
-{
-  label: 'Review',
-  description: 'Verify details'
-},
-{
-  label: 'Team',
-  description: 'Assign members'
-},
-{
-  label: 'Complete',
-  description: 'Success'
-}];
+import { useData } from '../../contexts/DataContext';
 
-const MOCK_TEAM = [
-{
-  id: '1',
-  name: 'Alex Morgan',
-  role: 'Project Manager',
-  projectCount: 3
-},
-{
-  id: '2',
-  name: 'Sam Wilson',
-  role: 'Lead Developer',
-  projectCount: 5
-},
-{
-  id: '3',
-  name: 'Jordan Lee',
-  role: 'UI Designer',
-  projectCount: 2
-},
-{
-  id: '4',
-  name: 'Casey Brown',
-  role: 'Backend Dev',
-  projectCount: 4
-}];
+const STEPS = [
+  {
+    label: 'Client Details',
+    description: 'Basic information'
+  },
+  {
+    label: 'Review',
+    description: 'Verify details'
+  },
+  {
+    label: 'Team',
+    description: 'Assign members'
+  },
+  {
+    label: 'Complete',
+    description: 'Success'
+  }
+];
 
 export function ClientOnboarding() {
   const navigate = useNavigate();
+  const { teamMembers, teamLoading, createClient } = useData();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [createdClientId, setCreatedClientId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     clientName: '',
     companyName: '',
@@ -81,46 +61,60 @@ export function ClientOnboarding() {
     team: [] as string[]
   });
   const [accessCode, setAccessCode] = useState('');
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
+
   const toggleTeamMember = (id: string) => {
     setFormData((prev) => ({
       ...prev,
-      team: prev.team.includes(id) ?
-      prev.team.filter((t) => t !== id) :
-      [...prev.team, id]
+      team: prev.team.includes(id)
+        ? prev.team.filter((t) => t !== id)
+        : [...prev.team, id]
     }));
   };
-  const generateAccessCode = () => {
-    const year = new Date().getFullYear();
-    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `PRJ-${year}-${randomPart}`;
-  };
-  const handleNext = () => {
+
+  const handleNext = async () => {
     if (currentStep === 2) {
-      // Final submission
+      // Final submission to Firebase
       setLoading(true);
-      setTimeout(() => {
-        setAccessCode(generateAccessCode());
+      setError(null);
+
+      try {
+        const response = await createClient(formData);
+        
+        if (response.success && response.client) {
+          setAccessCode(response.client.accessCode);
+          setCreatedClientId(response.client.id);
+          setCurrentStep(3);
+        } else {
+          setError(response.error || 'Failed to create client. Please try again.');
+        }
+      } catch (err) {
+        console.error('Error creating client:', err);
+        setError('An unexpected error occurred. Please try again.');
+      } finally {
         setLoading(false);
-        setCurrentStep(3);
-      }, 1500);
+      }
     } else {
       setCurrentStep((prev) => prev + 1);
     }
   };
+
   const handleBack = () => {
     setCurrentStep((prev) => prev - 1);
   };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(accessCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
   const shareViaEmail = () => {
     const subject = encodeURIComponent(
       `Your Project Access Code - ${formData.projectName}`
@@ -130,15 +124,19 @@ export function ClientOnboarding() {
     );
     window.open(`mailto:${formData.email}?subject=${subject}&body=${body}`);
   };
+
   const shareMessage = `Hi ${formData.clientName}! Your project access code is: ${accessCode} - Use this to track your project progress at our portal.`;
+
   const shareViaWhatsApp = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareMessage)}`);
   };
+
   const shareViaSMS = () => {
     window.open(
       `sms:${formData.phone}?body=${encodeURIComponent(shareMessage)}`
     );
   };
+
   return (
     <DashboardLayout userRole="admin">
       <div className="max-w-4xl mx-auto pb-20">
@@ -152,6 +150,12 @@ export function ClientOnboarding() {
         </div>
 
         <Stepper steps={STEPS} currentStep={currentStep} className="mb-12" />
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800">
+            {error}
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -171,60 +175,59 @@ export function ClientOnboarding() {
             transition={{
               duration: 0.3
             }}>
-
             {/* STEP 1: Client Details Form */}
-            {currentStep === 0 &&
-            <Card className="p-8">
+            {currentStep === 0 && (
+              <Card className="p-8">
                 <h2 className="text-xl font-bold text-toiral-dark mb-6 flex items-center gap-2">
                   <UserPlus className="w-5 h-5 text-toiral-primary" />
                   Client Information
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                  label="Client Name"
-                  name="clientName"
-                  placeholder="e.g. John Doe"
-                  value={formData.clientName}
-                  onChange={handleInputChange} />
-
+                    label="Client Name"
+                    name="clientName"
+                    placeholder="e.g. John Doe"
+                    value={formData.clientName}
+                    onChange={handleInputChange}
+                  />
                   <Input
-                  label="Company Name"
-                  name="companyName"
-                  placeholder="e.g. Acme Corp"
-                  value={formData.companyName}
-                  onChange={handleInputChange} />
-
+                    label="Company Name"
+                    name="companyName"
+                    placeholder="e.g. Acme Corp"
+                    value={formData.companyName}
+                    onChange={handleInputChange}
+                  />
                   <Input
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={formData.email}
-                  onChange={handleInputChange} />
-
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
                   <Input
-                  label="Phone Number"
-                  name="phone"
-                  placeholder="+1 (555) 000-0000"
-                  value={formData.phone}
-                  onChange={handleInputChange} />
-
+                    label="Phone Number"
+                    name="phone"
+                    placeholder="+1 (555) 000-0000"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                  />
                   <div className="md:col-span-2">
                     <Input
-                    label="Project Name"
-                    name="projectName"
-                    placeholder="e.g. Website Redesign"
-                    value={formData.projectName}
-                    onChange={handleInputChange} />
-
+                      label="Project Name"
+                      name="projectName"
+                      placeholder="e.g. Website Redesign"
+                      value={formData.projectName}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
               </Card>
-            }
+            )}
 
             {/* STEP 2: Review */}
-            {currentStep === 1 &&
-            <Card className="p-8">
+            {currentStep === 1 && (
+              <Card className="p-8">
                 <h2 className="text-xl font-bold text-toiral-dark mb-6">
                   Review Details
                 </h2>
@@ -272,42 +275,53 @@ export function ClientOnboarding() {
                   </div>
                 </div>
               </Card>
-            }
+            )}
 
             {/* STEP 3: Team Assignment */}
-            {currentStep === 2 &&
-            <div className="space-y-6">
+            {currentStep === 2 && (
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-bold text-toiral-dark">
                     Assign Team Members
                   </h2>
                   <Badge variant="info">{formData.team.length} Selected</Badge>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {MOCK_TEAM.map((member) =>
-                <TeamMemberCard
-                  key={member.id}
-                  {...member}
-                  selected={formData.team.includes(member.id)}
-                  onSelect={() => toggleTeamMember(member.id)} />
-
+                {teamLoading ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-gray-500">Loading team members...</p>
+                  </Card>
+                ) : teamMembers.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-gray-500">
+                      No team members found. Please add team members first.
+                    </p>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {teamMembers.map((member) => (
+                      <TeamMemberCard
+                        key={member.id}
+                        {...member}
+                        selected={formData.team.includes(member.id)}
+                        onSelect={() => toggleTeamMember(member.id)}
+                      />
+                    ))}
+                  </div>
                 )}
-                </div>
               </div>
-            }
+            )}
 
             {/* STEP 4: Success */}
-            {currentStep === 3 &&
-            <div className="text-center py-8">
+            {currentStep === 3 && (
+              <div className="text-center py-8">
                 <motion.div
-                initial={{
-                  scale: 0
-                }}
-                animate={{
-                  scale: 1
-                }}
-                className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-
+                  initial={{
+                    scale: 0
+                  }}
+                  animate={{
+                    scale: 1
+                  }}
+                  className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-12 h-12" />
                 </motion.div>
                 <h2 className="text-3xl font-bold text-toiral-dark mb-2">
@@ -332,20 +346,19 @@ export function ClientOnboarding() {
                   </div>
 
                   <button
-                  onClick={copyToClipboard}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors font-medium">
-
-                    {copied ?
-                  <>
+                    onClick={copyToClipboard}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors font-medium">
+                    {copied ? (
+                      <>
                         <Check className="w-4 h-4 text-green-400" />
                         <span className="text-green-400">Copied!</span>
-                      </> :
-
-                  <>
+                      </>
+                    ) : (
+                      <>
                         <Copy className="w-4 h-4" />
                         <span>Copy Code</span>
                       </>
-                  }
+                    )}
                   </button>
 
                   <p className="text-xs text-gray-400 mt-4 text-center">
@@ -364,9 +377,8 @@ export function ClientOnboarding() {
 
                   <div className="grid grid-cols-3 gap-3">
                     <button
-                    onClick={shareViaEmail}
-                    className="flex flex-col items-center gap-2 p-4 bg-gray-50 hover:bg-toiral-light/20 rounded-xl transition-colors group">
-
+                      onClick={shareViaEmail}
+                      className="flex flex-col items-center gap-2 p-4 bg-gray-50 hover:bg-toiral-light/20 rounded-xl transition-colors group">
                       <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Mail className="w-5 h-5" />
                       </div>
@@ -376,9 +388,8 @@ export function ClientOnboarding() {
                     </button>
 
                     <button
-                    onClick={shareViaWhatsApp}
-                    className="flex flex-col items-center gap-2 p-4 bg-gray-50 hover:bg-toiral-light/20 rounded-xl transition-colors group">
-
+                      onClick={shareViaWhatsApp}
+                      className="flex flex-col items-center gap-2 p-4 bg-gray-50 hover:bg-toiral-light/20 rounded-xl transition-colors group">
                       <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Send className="w-5 h-5" />
                       </div>
@@ -388,9 +399,8 @@ export function ClientOnboarding() {
                     </button>
 
                     <button
-                    onClick={shareViaSMS}
-                    className="flex flex-col items-center gap-2 p-4 bg-gray-50 hover:bg-toiral-light/20 rounded-xl transition-colors group">
-
+                      onClick={shareViaSMS}
+                      className="flex flex-col items-center gap-2 p-4 bg-gray-50 hover:bg-toiral-light/20 rounded-xl transition-colors group">
                       <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Phone className="w-5 h-5" />
                       </div>
@@ -411,30 +421,28 @@ export function ClientOnboarding() {
 
                 <div className="flex justify-center gap-4">
                   <Button
-                  variant="outline"
-                  onClick={() => navigate('/admin/dashboard')}>
-
+                    variant="outline"
+                    onClick={() => navigate('/admin/dashboard')}>
                     Go to Dashboard
                   </Button>
-                  <Button onClick={() => navigate('/admin/clients/1')}>
+                  <Button onClick={() => navigate(`/admin/clients/${createdClientId}`)}>
                     View Client Profile
                   </Button>
                 </div>
               </div>
-            }
+            )}
           </motion.div>
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        {currentStep < 3 &&
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 md:pl-80 z-20">
+        {currentStep < 3 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 md:pl-80 z-20">
             <div className="max-w-4xl mx-auto flex justify-between items-center">
               <Button
-              variant="ghost"
-              onClick={handleBack}
-              disabled={currentStep === 0}
-              className={currentStep === 0 ? 'invisible' : ''}>
-
+                variant="ghost"
+                onClick={handleBack}
+                disabled={currentStep === 0}
+                className={currentStep === 0 ? 'invisible' : ''}>
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back
               </Button>
               <Button onClick={handleNext} loading={loading}>
@@ -443,8 +451,8 @@ export function ClientOnboarding() {
               </Button>
             </div>
           </div>
-        }
+        )}
       </div>
-    </DashboardLayout>);
-
+    </DashboardLayout>
+  );
 }
