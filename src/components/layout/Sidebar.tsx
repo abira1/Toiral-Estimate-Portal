@@ -121,13 +121,13 @@ export function Sidebar({
     {
       icon: Briefcase,
       label: 'My Projects',
-      path: '/client/project/1'
+      path: `/client/project/${firstProjectId}`
     },
     {
       icon: Bell,
       label: 'Notifications',
       path: '/client/notifications',
-      badge: 3
+      badge: unreadNotificationCount
     },
     {
       icon: FileText,
