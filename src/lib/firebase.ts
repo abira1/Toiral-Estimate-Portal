@@ -24,15 +24,16 @@ import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
 import { getAuth, Auth } from 'firebase/auth';
 
-// TODO: Replace with your Firebase config
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  databaseURL: 'https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID'
+  apiKey: 'AIzaSyA_DuOJRIf9AXnADwRNqtGf-v9RA9NKikI',
+  authDomain: 'toiral-estimate-portal.firebaseapp.com',
+  databaseURL: 'https://toiral-estimate-portal-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'toiral-estimate-portal',
+  storageBucket: 'toiral-estimate-portal.firebasestorage.app',
+  messagingSenderId: '992011570132',
+  appId: '1:992011570132:web:1eef2c5ba17813dbb7a441',
+  measurementId: 'G-6LZNV0GX65'
 };
 
 // Initialize Firebase
