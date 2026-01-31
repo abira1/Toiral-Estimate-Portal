@@ -140,25 +140,12 @@ export function DataProvider({ children }: {children: ReactNode;}) {
       error?: string;
     }> => {
       if (!isFirebaseReady) {
-        // Mock mode: create locally
-        const newClient: Client = {
-          id: String(Date.now()),
-          accessCode: `PRJ-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-          name: formData.clientName,
-          companyName: formData.companyName,
-          email: formData.email,
-          phone: formData.phone,
-          status: 'Active',
-          projectIds: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        };
-        setClients((prev) => [...prev, newClient]);
         return {
-          success: true,
-          client: newClient
+          success: false,
+          error: 'Firebase not configured'
         };
       }
+
       const response = await clientService.create(formData);
       return {
         success: response.success,
