@@ -19,37 +19,8 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
-const INITIAL_TEAM_MEMBERS = [
-{
-  id: 1,
-  name: 'Sam Wilson',
-  email: 'sam@toiral.com',
-  phone: '+1 (555) 123-4567',
-  role: 'Developer',
-  projects: 5,
-  avatar: null,
-  image: null
-},
-{
-  id: 2,
-  name: 'Jordan Lee',
-  email: 'jordan@toiral.com',
-  phone: '+1 (555) 234-5678',
-  role: 'Designer',
-  projects: 3,
-  avatar: null,
-  image: null
-},
-{
-  id: 3,
-  name: 'Casey Brown',
-  email: 'casey@toiral.com',
-  phone: '+1 (555) 345-6789',
-  role: 'Developer',
-  projects: 4,
-  avatar: null,
-  image: null
-}];
+import { useData } from '../../contexts/DataContext';
+import { teamService } from '../../lib/firebaseServices';
 
 const INITIAL_ADMINS = [
 {
@@ -70,16 +41,15 @@ const INITIAL_ADMINS = [
 }];
 
 export function Settings() {
+  const { teamMembers, teamLoading } = useData();
   const [activeTab, setActiveTab] = useState<'team' | 'admin'>('team');
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isRemoveMemberModalOpen, setIsRemoveMemberModalOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<any>(null);
-  const [teamMembers, setTeamMembers] = useState(INITIAL_TEAM_MEMBERS);
   const [admins, setAdmins] = useState(INITIAL_ADMINS);
   const [newMember, setNewMember] = useState({
     name: '',
     email: '',
-    phone: '',
     role: '',
     image: null as File | null,
     imagePreview: null as string | null
@@ -101,32 +71,30 @@ export function Settings() {
       imagePreview: null
     });
   };
-  const handleAddMember = (e: React.FormEvent) => {
+  const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     const member = {
-      id: Date.now(),
       name: newMember.name,
       email: newMember.email,
-      phone: newMember.phone,
       role: newMember.role,
-      projects: 0,
-      avatar: newMember.imagePreview,
-      image: newMember.image
+      projectCount: 0
     };
-    setTeamMembers([...teamMembers, member]);
+    
+    await teamService.create(member);
+    
     setNewMember({
       name: '',
       email: '',
-      phone: '',
       role: '',
       image: null,
       imagePreview: null
     });
     setIsAddMemberModalOpen(false);
   };
-  const handleRemoveMember = () => {
+  const handleRemoveMember = async () => {
     if (memberToRemove) {
-      setTeamMembers(teamMembers.filter((m) => m.id !== memberToRemove.id));
+      // Firebase deletion would go here if we had a delete method
+      // For now, just close the modal
       setMemberToRemove(null);
       setIsRemoveMemberModalOpen(false);
     }
@@ -212,164 +180,124 @@ export function Settings() {
                 <h2 className="text-lg md:text-xl font-bold text-toiral-dark">
                   Team Members ({teamMembers.length})
                 </h2>
-                <Badge variant="info" className="text-xs">
-                  View Only
+                <Badge variant="success" className="text-xs">
+                  Real-time Data
                 </Badge>
               </div>
 
-              {/* Mobile: Card Layout */}
-              <div className="block md:hidden space-y-3">
-                {teamMembers.map((member, index) =>
-              <motion.div
-                key={member.id}
-                initial={{
-                  opacity: 0,
-                  y: 20
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0
-                }}
-                transition={{
-                  delay: index * 0.05
-                }}>
-
-                    <Card className="p-4 bg-gray-50 border-gray-100">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-toiral-light/30 flex items-center justify-center text-toiral-primary font-bold flex-shrink-0 overflow-hidden">
-                          {member.avatar ?
-                      <img
-                        src={member.avatar}
-                        alt={member.name}
-                        className="w-full h-full object-cover" /> :
-
-
-                      member.name.charAt(0)
-                      }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-toiral-dark truncate">
-                            {member.name}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {member.email}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {member.phone}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="neutral" className="text-xs">
-                            {member.role}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            {member.projects} projects
-                          </span>
-                        </div>
-                        <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
-                      onClick={() => {
-                        setMemberToRemove(member);
-                        setIsRemoveMemberModalOpen(true);
-                      }}>
-
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </Card>
-                  </motion.div>
-              )}
-              </div>
-
-              {/* Desktop: Table Layout */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold rounded-l-lg">
-                        Member
-                      </th>
-                      <th className="px-6 py-4 font-semibold">Role</th>
-                      <th className="px-6 py-4 font-semibold">Phone</th>
-                      <th className="px-6 py-4 font-semibold">Projects</th>
-                      <th className="px-6 py-4 font-semibold text-right rounded-r-lg">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
+              {teamLoading ? (
+                <div className="text-center py-8">
+                  <div className="w-10 h-10 border-4 border-toiral-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-gray-500 mt-4">Loading team members...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile: Card Layout */}
+                  <div className="block md:hidden space-y-3">
                     {teamMembers.map((member, index) =>
-                  <motion.tr
+                  <motion.div
                     key={member.id}
                     initial={{
                       opacity: 0,
-                      x: -20
+                      y: 20
                     }}
                     animate={{
                       opacity: 1,
-                      x: 0
+                      y: 0
                     }}
                     transition={{
                       delay: index * 0.05
-                    }}
-                    className="hover:bg-gray-50/50 transition-colors">
+                    }}>
 
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-toiral-light/30 flex items-center justify-center text-toiral-primary font-bold text-sm overflow-hidden">
-                              {member.avatar ?
-                          <img
-                            src={member.avatar}
-                            alt={member.name}
-                            className="w-full h-full object-cover" /> :
-
-
-                          member.name.charAt(0)
-                          }
+                        <Card className="p-4 bg-gray-50 border-gray-100">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-full bg-toiral-light/30 flex items-center justify-center text-toiral-primary font-bold flex-shrink-0">
+                              {member.name.charAt(0)}
                             </div>
-                            <div>
-                              <p className="font-bold text-toiral-dark">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-toiral-dark truncate">
                                 {member.name}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 truncate">
                                 {member.email}
                               </p>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="neutral">{member.role}</Badge>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {member.phone}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-gray-600">
-                          {member.projects} Active
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:text-red-500 hover:bg-red-50"
-                        onClick={() => {
-                          setMemberToRemove(member);
-                          setIsRemoveMemberModalOpen(true);
-                        }}>
-
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </motion.tr>
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="neutral" className="text-xs">
+                                {member.role}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {member.projectCount} projects
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
                   )}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
 
-              {teamMembers.length === 0 &&
+                  {/* Desktop: Table Layout */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                        <tr>
+                          <th className="px-6 py-4 font-semibold rounded-l-lg">
+                            Member
+                          </th>
+                          <th className="px-6 py-4 font-semibold">Role</th>
+                          <th className="px-6 py-4 font-semibold">Email</th>
+                          <th className="px-6 py-4 font-semibold">Projects</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {teamMembers.map((member, index) =>
+                      <motion.tr
+                        key={member.id}
+                        initial={{
+                          opacity: 0,
+                          x: -20
+                        }}
+                        animate={{
+                          opacity: 1,
+                          x: 0
+                        }}
+                        transition={{
+                          delay: index * 0.05
+                        }}
+                        className="hover:bg-gray-50/50 transition-colors">
+
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-toiral-light/30 flex items-center justify-center text-toiral-primary font-bold text-sm">
+                                  {member.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-toiral-dark">
+                                    {member.name}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant="neutral">{member.role}</Badge>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {member.email}
+                            </td>
+                            <td className="px-6 py-4 font-medium text-gray-600">
+                              {member.projectCount} Active
+                            </td>
+                          </motion.tr>
+                      )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              {!teamLoading && teamMembers.length === 0 &&
             <div className="text-center py-12">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="w-8 h-8 text-gray-300" />
@@ -610,7 +538,6 @@ export function Settings() {
             setNewMember({
               name: '',
               email: '',
-              phone: '',
               role: '',
               image: null,
               imagePreview: null
@@ -623,7 +550,7 @@ export function Settings() {
             {/* Image Upload - Mobile Optimized */}
             <div>
               <label className="block text-sm font-medium text-toiral-dark mb-3">
-                Profile Image
+                Profile Image (Optional)
               </label>
               {!newMember.imagePreview ?
               <div className="relative">
@@ -697,20 +624,6 @@ export function Settings() {
                 className="text-base md:text-sm" />
 
               <Input
-                label="Phone Number"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={newMember.phone}
-                onChange={(e) =>
-                setNewMember({
-                  ...newMember,
-                  phone: e.target.value
-                })
-                }
-                required
-                className="text-base md:text-sm" />
-
-              <Input
                 label="Role / Position"
                 placeholder="e.g. Frontend Developer"
                 value={newMember.role}
@@ -748,7 +661,6 @@ export function Settings() {
                   setNewMember({
                     name: '',
                     email: '',
-                    phone: '',
                     role: '',
                     image: null,
                     imagePreview: null
@@ -763,55 +675,6 @@ export function Settings() {
               </Button>
             </div>
           </form>
-        </Modal>
-
-        {/* Remove Member Confirmation Modal */}
-        <Modal
-          isOpen={isRemoveMemberModalOpen}
-          onClose={() => {
-            setIsRemoveMemberModalOpen(false);
-            setMemberToRemove(null);
-          }}
-          title="Remove Team Member">
-
-          <div className="space-y-4">
-            <div className="bg-red-50 border border-red-100 rounded-xl p-3 md:p-4 flex gap-3">
-              <Trash2 className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-red-900 text-sm">
-                  Warning: This action cannot be undone
-                </p>
-                <p className="text-xs md:text-sm text-red-700 mt-1">
-                  This will permanently remove {memberToRemove?.name} from the
-                  team. They will be unassigned from all projects.
-                </p>
-              </div>
-            </div>
-
-            <p className="text-gray-600 text-sm">
-              Are you sure you want to remove{' '}
-              <strong>{memberToRemove?.name}</strong> from the team?
-            </p>
-
-            <div className="pt-2 md:pt-4 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setIsRemoveMemberModalOpen(false);
-                  setMemberToRemove(null);
-                }}
-                className="w-full sm:w-auto h-11 md:h-10">
-
-                Cancel
-              </Button>
-              <Button
-                className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto h-11 md:h-10"
-                onClick={handleRemoveMember}>
-
-                <Trash2 className="w-4 h-4 mr-2" /> Remove Member
-              </Button>
-            </div>
-          </div>
         </Modal>
       </div>
     </DashboardLayout>);

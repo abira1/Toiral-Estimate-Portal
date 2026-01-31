@@ -11,58 +11,48 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
-const INVOICES = [
-{
-  id: 'INV-001',
-  client: 'Nike',
-  project: 'E-commerce Redesign',
-  amount: '$15,000',
-  status: 'Paid',
-  date: 'Oct 01, 2024'
-},
-{
-  id: 'INV-002',
-  client: 'Uber',
-  project: 'Mobile App MVP',
-  amount: '$4,500',
-  status: 'Pending',
-  date: 'Oct 15, 2024'
-},
-{
-  id: 'INV-003',
-  client: 'Airbnb',
-  project: 'Marketing Site',
-  amount: '$12,000',
-  status: 'Overdue',
-  date: 'Sep 28, 2024'
-},
-{
-  id: 'INV-004',
-  client: 'Netflix',
-  project: 'Internal Dashboard',
-  amount: '$8,000',
-  status: 'Paid',
-  date: 'Sep 15, 2024'
-},
-{
-  id: 'INV-005',
-  client: 'Nike',
-  project: 'E-commerce Redesign',
-  amount: '$5,000',
-  status: 'Pending',
-  date: 'Oct 20, 2024'
-}];
+import { useData } from '../../contexts/DataContext';
 
 export function Invoices() {
+  const { invoices, invoicesLoading, clients, projects } = useData();
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
-  const filteredInvoices = INVOICES.filter((inv) => {
+  
+  const filteredInvoices = invoices.filter((inv) => {
     const matchesFilter = filter === 'All' || inv.status === filter;
+    const client = clients.find(c => c.id === inv.clientId);
     const matchesSearch =
-    inv.client.toLowerCase().includes(search.toLowerCase()) ||
+    (client?.name || '').toLowerCase().includes(search.toLowerCase()) ||
     inv.id.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+  
+  // Get client name by ID
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client?.name || 'Unknown';
+  };
+  
+  // Get project name by ID
+  const getProjectName = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    return project?.name || 'General';
+  };
+  
+  // Format date
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+  
   return (
     <DashboardLayout userRole="admin">
       <div className="space-y-8 pb-20">
@@ -103,75 +93,87 @@ export function Invoices() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Invoice ID</th>
-                  <th className="px-6 py-4 font-semibold">Client</th>
-                  <th className="px-6 py-4 font-semibold">Project</th>
-                  <th className="px-6 py-4 font-semibold">Date</th>
-                  <th className="px-6 py-4 font-semibold">Amount</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredInvoices.map((invoice) =>
-                <tr
-                  key={invoice.id}
-                  className="hover:bg-gray-50/50 transition-colors group">
-
-                    <td className="px-6 py-4 font-mono font-medium text-toiral-primary">
-                      {invoice.id}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-toiral-dark">
-                      {invoice.client}
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 text-sm">
-                      {invoice.project}
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 text-sm">
-                      {invoice.date}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-toiral-dark">
-                      {invoice.amount}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge
-                      variant={
-                      invoice.status === 'Paid' ?
-                      'success' :
-                      invoice.status === 'Overdue' ?
-                      'error' :
-                      'warning'
-                      }>
-
-                        {invoice.status}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity">
-
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredInvoices.length === 0 &&
-          <div className="text-center py-12">
-              <p className="text-gray-500">No invoices found.</p>
+          {invoicesLoading ? (
+            <div className="text-center py-12">
+              <div className="w-12 h-12 border-4 border-toiral-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-500">Loading invoices...</p>
             </div>
-          }
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold">Invoice ID</th>
+                      <th className="px-6 py-4 font-semibold">Client</th>
+                      <th className="px-6 py-4 font-semibold">Project</th>
+                      <th className="px-6 py-4 font-semibold">Date</th>
+                      <th className="px-6 py-4 font-semibold">Amount</th>
+                      <th className="px-6 py-4 font-semibold">Status</th>
+                      <th className="px-6 py-4 font-semibold text-right">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredInvoices.map((invoice) =>
+                    <tr
+                      key={invoice.id}
+                      className="hover:bg-gray-50/50 transition-colors group">
+
+                        <td className="px-6 py-4 font-mono font-medium text-toiral-primary">
+                          {invoice.id}
+                        </td>
+                        <td className="px-6 py-4 font-medium text-toiral-dark">
+                          {getClientName(invoice.clientId)}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">
+                          {getProjectName(invoice.projectId)}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">
+                          {formatDate(invoice.createdAt)}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-toiral-dark">
+                          {formatCurrency(invoice.amount)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                          variant={
+                          invoice.status === 'Paid' ?
+                          'success' :
+                          invoice.status === 'Overdue' ?
+                          'error' :
+                          'warning'
+                          }>
+
+                            {invoice.status}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity">
+
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredInvoices.length === 0 &&
+              <div className="text-center py-12">
+                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">
+                    {search || filter !== 'All' ? 'No invoices found matching your criteria.' : 'No invoices yet. They will appear here once created.'}
+                  </p>
+                </div>
+              }
+            </>
+          )}
         </Card>
       </div>
     </DashboardLayout>);
