@@ -387,7 +387,10 @@ export function Landing() {
             {/* Help Link */}
             <p className="text-center mt-6 text-sm text-gray-500">
               Can't find your code?{' '}
-              <button className="text-toiral-primary font-medium hover:underline">
+              <button 
+                type="button"
+                onClick={handleContactAdmin}
+                className="text-toiral-primary font-medium hover:underline">
                 Contact support
               </button>
             </p>
