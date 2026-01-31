@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText,
@@ -9,136 +9,47 @@ import {
   Search,
   Filter,
   Check,
-  Trash2 } from
-'lucide-react';
+  Trash2
+} from 'lucide-react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { StarDoodle } from '../components/doodles/StarDoodle';
-type NotificationType =
-'project_update' |
-'approval_request' |
-'payment' |
-'system' |
-'alert';
-interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  description: string;
-  timestamp: string;
-  read: boolean;
-}
-const MOCK_NOTIFICATIONS: Notification[] = [
-{
-  id: '1',
-  type: 'approval_request',
-  title: 'Quotation Approved',
-  description:
-  'Nike has approved the "E-commerce Redesign" quotation. The project is ready to begin.',
-  timestamp: '2 mins ago',
-  read: false
-},
-{
-  id: '2',
-  type: 'project_update',
-  title: 'New Comment Added',
-  description:
-  'Alex Morgan added a comment on "Homepage Wireframes" in the design phase.',
-  timestamp: '1 hour ago',
-  read: false
-},
-{
-  id: '3',
-  type: 'payment',
-  title: 'Invoice Payment Received',
-  description:
-  'Invoice #1023 has been successfully paid by Nike. Amount: $4,500.',
-  timestamp: '3 hours ago',
-  read: false
-},
-{
-  id: '4',
-  type: 'alert',
-  title: 'Deadline Approaching',
-  description:
-  'Project "Uber MVP" phase 1 is due tomorrow at 5:00 PM. Please review progress.',
-  timestamp: '5 hours ago',
-  read: true
-},
-{
-  id: '5',
-  type: 'system',
-  title: 'System Maintenance Scheduled',
-  description:
-  'Toiral Estimate will be down for maintenance on Oct 30 from 2:00 AM to 4:00 AM EST.',
-  timestamp: '1 day ago',
-  read: true
-},
-{
-  id: '6',
-  type: 'project_update',
-  title: 'Design Phase Completed',
-  description:
-  'The design phase for "Airbnb Marketing Site" has been completed and is ready for review.',
-  timestamp: '2 days ago',
-  read: true
-},
-{
-  id: '7',
-  type: 'approval_request',
-  title: 'Approval Required',
-  description:
-  'Client feedback on "Netflix Dashboard" wireframes requires your approval to proceed.',
-  timestamp: '3 days ago',
-  read: true
-},
-{
-  id: '8',
-  type: 'payment',
-  title: 'Invoice Generated',
-  description:
-  'Invoice #1022 has been generated for Uber project. Total amount: $12,500.',
-  timestamp: '4 days ago',
-  read: true
-}];
+import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
+import type { NotificationType, Notification } from '../types';
 
 interface NotificationsProps {
   userRole: 'admin' | 'client';
 }
+
 export function Notifications({ userRole }: NotificationsProps) {
-  const [notifications, setNotifications] =
-  useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const { notifications, notificationsLoading, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } = useData();
+  const { adminUser, clientSession } = useAuth();
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<NotificationType | 'all'>(
-    'all'
-  );
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-    prev.map((n) =>
-    n.id === id ?
-    {
-      ...n,
-      read: true
-    } :
-    n
-    )
-    );
+  const [selectedType, setSelectedType] = useState<NotificationType | 'all'>('all');
+
+  // Get current user ID based on role
+  const currentUserId = userRole === 'admin' ? 'admin' : clientSession?.clientId || '';
+
+  // Filter notifications for current user
+  const userNotifications = notifications.filter(n => n.userId === currentUserId);
+
+  const handleMarkAsRead = async (id: string) => {
+    await markNotificationAsRead(id);
   };
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-    prev.map((n) => ({
-      ...n,
-      read: true
-    }))
-    );
+
+  const handleMarkAllAsRead = async () => {
+    await markAllNotificationsAsRead(currentUserId);
   };
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+  const handleDeleteNotification = async (id: string) => {
+    await deleteNotification(id);
   };
+
   const getIcon = (type: NotificationType) => {
     switch (type) {
       case 'project_update':
@@ -153,6 +64,7 @@ export function Notifications({ userRole }: NotificationsProps) {
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
   };
+
   const getBgColor = (type: NotificationType) => {
     switch (type) {
       case 'project_update':
@@ -167,6 +79,7 @@ export function Notifications({ userRole }: NotificationsProps) {
         return 'bg-gray-100';
     }
   };
+
   const getTypeLabel = (type: NotificationType) => {
     switch (type) {
       case 'project_update':
@@ -181,17 +94,43 @@ export function Notifications({ userRole }: NotificationsProps) {
         return 'System';
     }
   };
+
+  const formatTimestamp = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  };
+
   // Filter notifications
-  const filteredNotifications = notifications.filter((n) => {
+  const filteredNotifications = userNotifications.filter((n) => {
     const matchesFilter =
-    filter === 'all' || (filter === 'unread' ? !n.read : n.read);
+      filter === 'all' || (filter === 'unread' ? !n.read : n.read);
     const matchesSearch =
-    n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    n.description.toLowerCase().includes(searchTerm.toLowerCase());
+      n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      n.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || n.type === selectedType;
     return matchesFilter && matchesSearch && matchesType;
   });
-  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const unreadCount = userNotifications.filter((n) => !n.read).length;
+
+  if (notificationsLoading) {
+    return (
+      <DashboardLayout userRole={userRole}>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-toiral-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout userRole={userRole}>
       <div className="space-y-8">
@@ -199,26 +138,25 @@ export function Notifications({ userRole }: NotificationsProps) {
         <div className="relative bg-toiral-dark rounded-3xl p-8 lg:p-12 overflow-hidden text-white shadow-xl">
           <StarDoodle
             className="absolute top-10 right-10 text-toiral-secondary opacity-50"
-            size={60} />
-
+            size={60}
+          />
           <StarDoodle
             className="absolute bottom-10 left-20 text-toiral-primary opacity-50"
-            size={40} />
-
+            size={40}
+          />
 
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
                 <Bell className="w-6 h-6 text-white" />
               </div>
-              {unreadCount > 0 &&
-              <Badge
-                variant="error"
-                className="bg-red-500 text-white border-none">
-
+              {unreadCount > 0 && (
+                <Badge
+                  variant="error"
+                  className="bg-red-500 text-white border-none">
                   {unreadCount} New
                 </Badge>
-              }
+              )}
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold mb-3">
               Notifications
@@ -237,22 +175,19 @@ export function Notifications({ userRole }: NotificationsProps) {
               variant={filter === 'all' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setFilter('all')}>
-
-              All ({notifications.length})
+              All ({userNotifications.length})
             </Button>
             <Button
               variant={filter === 'unread' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setFilter('unread')}>
-
               Unread ({unreadCount})
             </Button>
             <Button
               variant={filter === 'read' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setFilter('read')}>
-
-              Read ({notifications.length - unreadCount})
+              Read ({userNotifications.length - unreadCount})
             </Button>
           </div>
 
@@ -264,14 +199,14 @@ export function Notifications({ userRole }: NotificationsProps) {
                 placeholder="Search notifications..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-toiral-light/50 focus:outline-none focus:ring-2 focus:ring-toiral-primary/20 text-sm" />
-
+                className="w-full pl-10 pr-4 py-2 rounded-full border border-toiral-light/50 focus:outline-none focus:ring-2 focus:ring-toiral-primary/20 text-sm"
+              />
             </div>
-            {unreadCount > 0 &&
-            <Button variant="outline" size="sm" onClick={markAllAsRead}>
+            {unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
                 <Check className="w-4 h-4 mr-2" /> Mark All Read
               </Button>
-            }
+            )}
           </div>
         </div>
 
@@ -279,33 +214,39 @@ export function Notifications({ userRole }: NotificationsProps) {
         <div className="flex gap-2 overflow-x-auto pb-2">
           <button
             onClick={() => setSelectedType('all')}
-            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${selectedType === 'all' ? 'bg-toiral-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>
-
+            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+              selectedType === 'all'
+                ? 'bg-toiral-primary text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}>
             All Types
           </button>
           {(
-          [
-          'project_update',
-          'approval_request',
-          'payment',
-          'alert',
-          'system'] as
-          NotificationType[]).
-          map((type) =>
-          <button
-            key={type}
-            onClick={() => setSelectedType(type)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${selectedType === type ? 'bg-toiral-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>
-
+            [
+              'project_update',
+              'approval_request',
+              'payment',
+              'alert',
+              'system'
+            ] as NotificationType[]
+          ).map((type) => (
+            <button
+              key={type}
+              onClick={() => setSelectedType(type)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+                selectedType === type
+                  ? 'bg-toiral-primary text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+              }`}>
               {getTypeLabel(type)}
             </button>
-          )}
+          ))}
         </div>
 
         {/* Notifications List */}
         <div className="space-y-4">
-          {filteredNotifications.length === 0 ?
-          <Card className="py-16 text-center">
+          {filteredNotifications.length === 0 ? (
+            <Card className="py-16 text-center">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                 <Bell className="w-10 h-10" />
               </div>
@@ -313,36 +254,39 @@ export function Notifications({ userRole }: NotificationsProps) {
                 No notifications found
               </h3>
               <p className="text-gray-500">
-                {searchTerm ?
-              'Try adjusting your search terms' :
-              "You're all caught up!"}
+                {searchTerm
+                  ? 'Try adjusting your search terms'
+                  : "You're all caught up!"}
               </p>
-            </Card> :
-
-          filteredNotifications.map((notification, index) =>
-          <motion.div
-            key={notification.id}
-            initial={{
-              opacity: 0,
-              y: 20
-            }}
-            animate={{
-              opacity: 1,
-              y: 0
-            }}
-            transition={{
-              delay: index * 0.05
-            }}>
-
+            </Card>
+          ) : (
+            filteredNotifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                initial={{
+                  opacity: 0,
+                  y: 20
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0
+                }}
+                transition={{
+                  delay: index * 0.05
+                }}>
                 <Card
-              hoverable
-              className={`relative ${notification.read ? 'bg-white' : 'bg-toiral-light/10 border-2 border-toiral-primary/20'}`}>
-
+                  hoverable
+                  className={`relative ${
+                    notification.read
+                      ? 'bg-white'
+                      : 'bg-toiral-light/10 border-2 border-toiral-primary/20'
+                  }`}>
                   <div className="flex gap-4 items-start">
                     {/* Icon */}
                     <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${getBgColor(notification.type)}`}>
-
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                        getBgColor(notification.type)
+                      }`}>
                       {getIcon(notification.type)}
                     </div>
 
@@ -352,13 +296,16 @@ export function Notifications({ userRole }: NotificationsProps) {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3
-                          className={`font-bold ${notification.read ? 'text-gray-700' : 'text-toiral-dark'}`}>
-
+                              className={`font-bold ${
+                                notification.read
+                                  ? 'text-gray-700'
+                                  : 'text-toiral-dark'
+                              }`}>
                               {notification.title}
                             </h3>
-                            {!notification.read &&
-                        <div className="w-2 h-2 rounded-full bg-toiral-primary" />
-                        }
+                            {!notification.read && (
+                              <div className="w-2 h-2 rounded-full bg-toiral-primary" />
+                            )}
                           </div>
                           <p className="text-sm text-gray-600 leading-relaxed">
                             {notification.description}
@@ -368,25 +315,23 @@ export function Notifications({ userRole }: NotificationsProps) {
 
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                          {notification.timestamp}
+                          {formatTimestamp(notification.createdAt)}
                         </span>
                         <div className="flex gap-2">
-                          {!notification.read &&
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-xs">
-
+                          {!notification.read && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMarkAsRead(notification.id)}
+                              className="text-xs">
                               <Check className="w-3 h-3 mr-1" /> Mark as read
                             </Button>
-                      }
+                          )}
                           <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteNotification(notification.id)}
-                        className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50">
-
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteNotification(notification.id)}
+                            className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50">
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
@@ -395,10 +340,10 @@ export function Notifications({ userRole }: NotificationsProps) {
                   </div>
                 </Card>
               </motion.div>
-          )
-          }
+            ))
+          )}
         </div>
       </div>
-    </DashboardLayout>);
-
+    </DashboardLayout>
+  );
 }
