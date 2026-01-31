@@ -13,7 +13,8 @@ import {
   AlertCircle,
   PlayCircle,
   PauseCircle,
-  Eye } from
+  Eye,
+  Loader2 } from
 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
@@ -22,6 +23,9 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Chart } from '../../components/ui/Chart';
+import { MorphLoading } from '../../components/ui/MorphLoading';
+import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 // Project status configuration with colors and icons
 const STATUS_CONFIG = {
   Planning: {
