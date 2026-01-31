@@ -496,9 +496,9 @@ export function Reports() {
                       <p className="text-sm font-medium text-toiral-dark">
                         {activity.title}
                       </p>
-                      {activity.message && (
+                      {activity.description && (
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {activity.message}
+                          {activity.description}
                         </p>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
