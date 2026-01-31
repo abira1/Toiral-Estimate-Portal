@@ -201,16 +201,8 @@ export function DataProvider({ children }: {children: ReactNode;}) {
       project?: Project;
     }> => {
       if (!isFirebaseReady) {
-        const newProject: Project = {
-          ...project,
-          id: String(Date.now()),
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        };
-        setProjects((prev) => [...prev, newProject]);
         return {
-          success: true,
-          project: newProject
+          success: false
         };
       }
       const response = await projectService.create(project);
@@ -221,32 +213,22 @@ export function DataProvider({ children }: {children: ReactNode;}) {
     },
     [isFirebaseReady]
   );
+
   const updateProject = useCallback(
     async (projectId: string, updates: Partial<Project>): Promise<boolean> => {
       if (!isFirebaseReady) {
-        setProjects((prev) =>
-        prev.map((p) =>
-        p.id === projectId ?
-        {
-          ...p,
-          ...updates,
-          updatedAt: Date.now()
-        } :
-        p
-        )
-        );
-        return true;
+        return false;
       }
       const response = await projectService.update(projectId, updates);
       return response.success;
     },
     [isFirebaseReady]
   );
+
   const deleteProject = useCallback(
     async (projectId: string): Promise<boolean> => {
       if (!isFirebaseReady) {
-        setProjects((prev) => prev.filter((p) => p.id !== projectId));
-        return true;
+        return false;
       }
       const response = await projectService.delete(projectId);
       return response.success;
