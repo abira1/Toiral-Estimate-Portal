@@ -95,6 +95,26 @@ export function ClientDashboard() {
     }
   };
 
+  // Show empty state if no projects
+  if (!project) {
+    return (
+      <DashboardLayout userRole="client">
+        <div className="space-y-8">
+          <Card className="p-12 text-center">
+            <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-700 mb-2">No Active Projects</h2>
+            <p className="text-gray-500 mb-6">
+              You don't have any active projects yet. Please contact your administrator.
+            </p>
+            <Button onClick={logoutClient} variant="outline">
+              Logout
+            </Button>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout userRole="client">
       <div className="space-y-8">
@@ -114,27 +134,28 @@ export function ClientDashboard() {
               variant="info"
               className="mb-4 bg-white/10 text-white border-white/20">
 
-              Active Project
+              {project.status}
             </Badge>
             <h1 className="text-3xl lg:text-4xl font-bold mb-4">
-              Hello, Nike Team! 👋
+              Hello, {client.name}! 👋
             </h1>
             <p className="text-toiral-light text-lg mb-8">
               Your project{' '}
-              <span className="font-bold text-white">"{project.name}"</span> is
-              moving along nicely. We are currently working on the frontend
-              implementation.
+              <span className="font-bold text-white">"{project.name}"</span>
+              {project.description && ` - ${project.description}`}
             </p>
             <div className="flex flex-wrap gap-4">
               <Button
                 variant="outline"
+                onClick={() => navigate(`/client/project/${project.id}`)}
                 className="bg-white !text-toiral-dark hover:!bg-toiral-light border-white shadow-soft">
 
                 View Timeline
               </Button>
               <Button
                 variant="outline"
-                className="!border-white !text-white hover:!bg-white/10">
+                className="!border-white !text-white hover:!bg-white/10"
+                onClick={() => window.location.href = 'mailto:abirsabirhossain@gmail.com'}>
 
                 Contact Admin
               </Button>
