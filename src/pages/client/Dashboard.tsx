@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Clock,
   CheckCircle,
   AlertCircle,
   ArrowRight,
   FileText,
-  MessageSquare } from
+  MessageSquare,
+  Loader2 } from
 'lucide-react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Card } from '../../components/ui/Card';
@@ -14,25 +16,84 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { StarDoodle } from '../../components/doodles/StarDoodle';
+import { MorphLoading } from '../../components/ui/MorphLoading';
+import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
+import { notificationService } from '../../lib/firebaseServices';
+import type { Notification } from '../../types';
+
 export function ClientDashboard() {
-  const project = {
-    name: 'E-commerce Redesign',
-    status: 'In Progress',
-    progress: 65,
-    nextMilestone: 'Frontend Development',
-    dueDate: 'Oct 24, 2024'
+  const navigate = useNavigate();
+  const { clientSession, logoutClient } = useAuth();
+  const { projects, getProjectsByClientId, projectsLoading } = useData();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!clientSession) {
+      navigate('/');
+    }
+  }, [clientSession, navigate]);
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!clientSession) return;
+
+    const fetchNotifications = async () => {
+      const response = await notificationService.getByUserId(clientSession.clientId);
+      if (response.success && response.data) {
+        setNotifications(response.data.slice(0, 3)); // Show latest 3
+      }
+      setNotificationsLoading(false);
+    };
+
+    fetchNotifications();
+  }, [clientSession]);
+
+  // Get client's projects
+  const clientProjects = clientSession
+    ? getProjectsByClientId(clientSession.clientId)
+    : [];
+  const project = clientProjects[0]; // Get first project
+  const client = clientSession?.client;
+
+  // Show loading state
+  if (projectsLoading || !client) {
+    return (
+      <DashboardLayout userRole="client">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <MorphLoading />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Format date helper
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
   };
-  const notifications = [
-  {
-    title: 'Design Approved',
-    desc: 'Phase 1 designs have been finalized.',
-    date: 'Yesterday'
-  },
-  {
-    title: 'Invoice Generated',
-    desc: 'Invoice #1024 is ready for payment.',
-    date: '2 days ago'
-  }];
+
+  // Get next pending milestone
+  const nextMilestone = project?.milestones?.find(m => m.status === 'In Progress' || m.status === 'Pending');
+  
+  // Get status badge variant
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Completed': return 'success';
+      case 'In Progress': return 'info';
+      case 'Planning': return 'warning';
+      default: return 'default';
+    }
+  };
 
   return (
     <DashboardLayout userRole="client">
