@@ -126,35 +126,18 @@ export function AuthProvider({ children }: {children: ReactNode;}) {
     error?: string;
   }> => {
     if (!isFirebaseReady) {
-      // For demo mode without Firebase, simulate success
-      const mockClient: Client = {
-        id: 'demo-client',
-        accessCode,
-        name: 'Demo Client',
-        companyName: 'Demo Company',
-        email: 'demo@example.com',
-        phone: '+1 555-0000',
-        status: 'Active',
-        projectIds: ['demo-project'],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-      const session: ClientSession = {
-        clientId: mockClient.id,
-        accessCode,
-        client: mockClient
-      };
-      setClientSession(session);
-      localStorage.setItem('clientSession', JSON.stringify(session));
       return {
-        success: true
+        success: false,
+        error: 'Firebase not configured. Please contact administrator.'
       };
     }
+
     setIsClientLoading(true);
     try {
       const response = await clientService.getByAccessCode(
         accessCode.toUpperCase().trim()
       );
+
       if (response.success && response.data) {
         const session: ClientSession = {
           clientId: response.data.id,
@@ -167,6 +150,7 @@ export function AuthProvider({ children }: {children: ReactNode;}) {
           success: true
         };
       }
+
       return {
         success: false,
         error: response.error || 'Invalid access code'
