@@ -283,45 +283,26 @@ export function DataProvider({ children }: {children: ReactNode;}) {
   const markNotificationAsRead = useCallback(
     async (notificationId: string): Promise<void> => {
       if (!isFirebaseReady) {
-        setNotifications((prev) =>
-        prev.map((n) =>
-        n.id === notificationId ?
-        {
-          ...n,
-          read: true
-        } :
-        n
-        )
-        );
         return;
       }
       await notificationService.markAsRead(notificationId);
     },
     [isFirebaseReady]
   );
+
   const markAllNotificationsAsRead = useCallback(
     async (userId: string): Promise<void> => {
       if (!isFirebaseReady) {
-        setNotifications((prev) =>
-        prev.map((n) =>
-        n.userId === userId ?
-        {
-          ...n,
-          read: true
-        } :
-        n
-        )
-        );
         return;
       }
       await notificationService.markAllAsRead(userId);
     },
     [isFirebaseReady]
   );
+
   const deleteNotification = useCallback(
     async (notificationId: string): Promise<void> => {
       if (!isFirebaseReady) {
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
         return;
       }
       await notificationService.delete(notificationId);
