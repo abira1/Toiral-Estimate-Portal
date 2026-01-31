@@ -29,16 +29,34 @@ function GoogleIcon({ className }: {className?: string;}) {
 }
 export function AdminLogin() {
   const navigate = useNavigate();
+  const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const logoUrl = "/ChatGPT_Image_Apr_22,_2025,_02_48_04_AM_(1).png";
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setLoading(true);
-    // Simulate Google OAuth flow
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const success = await signInWithGoogle();
+      if (success) {
+        navigate('/admin/dashboard');
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Sign-in error:', err);
+      if (err.message === 'UNAUTHORIZED_ADMIN') {
+        setError(
+          'Access Denied. Only authorized administrators can access this panel. Contact abirsabirhossain@gmail.com for access.'
+        );
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
+    } finally {
       setLoading(false);
-      navigate('/admin/dashboard');
-    }, 1500);
+    }
   };
   return (
     <div className="min-h-screen bg-toiral-dark flex items-center justify-center p-4 relative overflow-hidden">
