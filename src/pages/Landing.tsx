@@ -338,9 +338,12 @@ export function Landing() {
               <div>
                 <Input
                   label="Access Code"
-                  placeholder="PRJ-2024-XYZ"
+                  placeholder="PRJ-2024-XXXX"
                   value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value)}
+                  onChange={(e) => {
+                    setAccessCode(e.target.value);
+                    setError(null); // Clear error when user types
+                  }}
                   className="text-center text-lg tracking-wider font-mono" />
 
                 <p className="text-xs text-gray-400 mt-2 text-center">
@@ -348,11 +351,33 @@ export function Landing() {
                 </p>
               </div>
 
+              {/* Error Message */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-800">{error}</p>
+                      <button
+                        type="button"
+                        onClick={handleContactAdmin}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium mt-1 underline">
+                        Contact Admin for Help
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               <Button
                 type="submit"
                 className="w-full"
                 size="lg"
-                loading={loading}>
+                loading={isClientLoading}
+                disabled={isClientLoading}>
 
                 View My Project
                 <ArrowRight className="ml-2 w-5 h-5" />
