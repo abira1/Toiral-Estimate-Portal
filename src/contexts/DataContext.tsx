@@ -107,7 +107,7 @@ export function DataProvider({ children }: {children: ReactNode;}) {
   const [invoicesLoading, setInvoicesLoading] = useState(true);
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   // ==========================================
   // DATA FETCHING & SUBSCRIPTIONS
   // ==========================================
@@ -118,15 +118,18 @@ export function DataProvider({ children }: {children: ReactNode;}) {
     const unsubProjects = projectService.subscribe(setProjects);
     const unsubTeam = teamService.subscribe(setTeamMembers);
     const unsubInvoices = invoiceService.subscribe(setInvoices);
+    const unsubNotifications = notificationService.subscribe(setNotifications);
     setClientsLoading(false);
     setProjectsLoading(false);
     setTeamLoading(false);
     setInvoicesLoading(false);
+    setNotificationsLoading(false);
     return () => {
       unsubClients();
       unsubProjects();
       unsubTeam();
       unsubInvoices();
+      unsubNotifications();
     };
   }, [isFirebaseReady]);
   // ==========================================
