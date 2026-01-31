@@ -78,10 +78,19 @@ export function AuthProvider({ children }: {children: ReactNode;}) {
       console.warn('Firebase not configured');
       return false;
     }
+
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      
       if (result.user) {
+        // Check if user is authorized admin
+        if (!isAuthorizedAdmin(result.user.email)) {
+          // Not authorized - sign out immediately
+          await firebaseSignOut(auth);
+          throw new Error('UNAUTHORIZED_ADMIN');
+        }
+
         setAdminUser({
           uid: result.user.uid,
           email: result.user.email || '',
@@ -91,8 +100,11 @@ export function AuthProvider({ children }: {children: ReactNode;}) {
         return true;
       }
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google sign-in error:', error);
+      if (error.message === 'UNAUTHORIZED_ADMIN') {
+        throw error;
+      }
       return false;
     }
   };
