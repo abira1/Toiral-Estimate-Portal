@@ -193,15 +193,31 @@ function JourneyIllustration() {
 }
 export function Landing() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { loginWithAccessCode, isClientLoading } = useAuth();
   const [accessCode, setAccessCode] = useState('');
-  const handleLogin = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setError(null);
+
+    if (!accessCode.trim()) {
+      setError('Please enter your access code');
+      return;
+    }
+
+    const result = await loginWithAccessCode(accessCode.trim());
+
+    if (result.success) {
       navigate('/client/dashboard');
-    }, 1500);
+    } else {
+      setError(result.error || 'Invalid access code. Please check your code and try again.');
+      setAccessCode(''); // Clear input on error
+    }
+  };
+
+  const handleContactAdmin = () => {
+    window.location.href = 'mailto:abirsabirhossain@gmail.com?subject=Access Code Help - Toiral Estimate';
   };
   return (
     <div className="min-h-screen bg-toiral-bg flex flex-col lg:flex-row overflow-hidden">
