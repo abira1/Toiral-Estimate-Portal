@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock } from 'lucide-react';
+import { Shield, Lock, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { useAuth } from '../../contexts/AuthContext';
 function GoogleIcon({ className }: {className?: string;}) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">
