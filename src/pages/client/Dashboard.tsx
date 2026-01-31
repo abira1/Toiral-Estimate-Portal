@@ -232,7 +232,7 @@ export function ClientDashboard() {
                         <h4 className="font-bold text-toiral-dark text-sm">
                           {notif.title}
                         </h4>
-                        <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">{notif.description}</p>
                         <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wider">
                           {formatDate(notif.createdAt)}
                         </p>
