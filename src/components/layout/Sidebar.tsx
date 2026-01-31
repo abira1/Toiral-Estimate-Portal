@@ -43,6 +43,19 @@ export function Sidebar({
   userRole
 }: SidebarProps) {
   const location = useLocation();
+  const { notifications, projects, getProjectsByClientId } = useData();
+  const { adminUser, clientSession } = useAuth();
+
+  // Calculate unread notification count for current user
+  const currentUserId = userRole === 'admin' ? 'admin' : clientSession?.clientId || '';
+  const unreadNotificationCount = notifications.filter(
+    n => n.userId === currentUserId && !n.read
+  ).length;
+
+  // Get first project ID for client
+  const clientProjects = clientSession ? getProjectsByClientId(clientSession.clientId) : [];
+  const firstProjectId = clientProjects.length > 0 ? clientProjects[0].id : '1';
+
   const adminSections: NavSection[] = [
   {
     title: 'MAIN',
@@ -57,7 +70,7 @@ export function Sidebar({
       icon: Bell,
       label: 'Notifications',
       path: '/admin/notifications',
-      badge: 3,
+      badge: unreadNotificationCount,
       shortcut: '⌘N'
     }]
 
