@@ -170,7 +170,7 @@ export function ClientDashboard() {
               <h2 className="text-xl font-bold text-toiral-dark">
                 Project Status
               </h2>
-              <Badge variant="success">On Track</Badge>
+              <Badge variant={getStatusVariant(project.status)}>{project.status}</Badge>
             </div>
 
             <div className="space-y-8">
@@ -191,21 +191,23 @@ export function ClientDashboard() {
                 <div className="p-4 bg-white rounded-2xl border border-gray-100">
                   <Clock className="w-5 h-5 text-toiral-primary mb-2" />
                   <p className="text-xs text-gray-400">Next Milestone</p>
-                  <p className="font-bold text-toiral-dark">
-                    {project.nextMilestone}
+                  <p className="font-bold text-toiral-dark text-sm">
+                    {nextMilestone?.title || 'No pending milestones'}
                   </p>
                 </div>
                 <div className="p-4 bg-white rounded-2xl border border-gray-100">
                   <AlertCircle className="w-5 h-5 text-amber-500 mb-2" />
                   <p className="text-xs text-gray-400">Due Date</p>
-                  <p className="font-bold text-toiral-dark">
-                    {project.dueDate}
+                  <p className="font-bold text-toiral-dark text-sm">
+                    {project.dueDate || 'Not set'}
                   </p>
                 </div>
                 <div className="p-4 bg-white rounded-2xl border border-gray-100">
                   <FileText className="w-5 h-5 text-purple-500 mb-2" />
-                  <p className="text-xs text-gray-400">Pending Actions</p>
-                  <p className="font-bold text-toiral-dark">1 Approval</p>
+                  <p className="text-xs text-gray-400">Documents</p>
+                  <p className="font-bold text-toiral-dark">
+                    {project.documents?.length || 0} Files
+                  </p>
                 </div>
               </div>
             </div>
@@ -214,27 +216,43 @@ export function ClientDashboard() {
           {/* Notifications */}
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-toiral-dark">Updates</h2>
-            <div className="space-y-4">
-              {notifications.map((notif, index) =>
-              <Card key={index} className="!p-4">
-                  <div className="flex gap-3">
-                    <div className="w-2 h-2 rounded-full bg-toiral-primary mt-2 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-bold text-toiral-dark text-sm">
-                        {notif.title}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-1">{notif.desc}</p>
-                      <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wider">
-                        {notif.date}
-                      </p>
+            {notificationsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-toiral-primary" />
+              </div>
+            ) : notifications.length > 0 ? (
+              <div className="space-y-4">
+                {notifications.map((notif) =>
+                <Card key={notif.id} className="!p-4">
+                    <div className="flex gap-3">
+                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                        notif.read ? 'bg-gray-300' : 'bg-toiral-primary'
+                      }`} />
+                      <div>
+                        <h4 className="font-bold text-toiral-dark text-sm">
+                          {notif.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
+                        <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wider">
+                          {formatDate(notif.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              )}
-              <Button variant="ghost" className="w-full text-sm">
-                View All Notifications
-              </Button>
-            </div>
+                  </Card>
+                )}
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-sm"
+                  onClick={() => navigate('/client/notifications')}>
+                  View All Notifications
+                </Button>
+              </div>
+            ) : (
+              <Card className="!p-6 text-center">
+                <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No new updates</p>
+              </Card>
+            )}
           </div>
         </div>
 
