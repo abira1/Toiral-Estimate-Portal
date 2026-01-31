@@ -561,7 +561,7 @@ export function AdminDashboard() {
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-500 mb-4">
-                              {project.client}
+                              {getClientName(project.clientId)}
                             </p>
                             <ProgressBar
                             progress={project.progress}
