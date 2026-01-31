@@ -158,30 +158,18 @@ export function DataProvider({ children }: {children: ReactNode;}) {
   const updateClient = useCallback(
     async (clientId: string, updates: Partial<Client>): Promise<boolean> => {
       if (!isFirebaseReady) {
-        setClients((prev) =>
-        prev.map((c) =>
-        c.id === clientId ?
-        {
-          ...c,
-          ...updates,
-          updatedAt: Date.now()
-        } :
-        c
-        )
-        );
-        return true;
+        return false;
       }
       const response = await clientService.update(clientId, updates);
       return response.success;
     },
     [isFirebaseReady]
   );
+
   const deleteClient = useCallback(
     async (clientId: string): Promise<boolean> => {
       if (!isFirebaseReady) {
-        setClients((prev) => prev.filter((c) => c.id !== clientId));
-        setProjects((prev) => prev.filter((p) => p.clientId !== clientId));
-        return true;
+        return false;
       }
       const response = await clientService.delete(clientId);
       return response.success;
