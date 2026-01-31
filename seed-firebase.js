@@ -1,5 +1,5 @@
 // Seed Firebase with initial team members
-import { seedInitialData } from './src/lib/firebaseServices';
+import { seedInitialData } from './src/lib/firebaseServices.ts';
 
 console.log('🌱 Seeding Firebase with initial data...');
 seedInitialData()
