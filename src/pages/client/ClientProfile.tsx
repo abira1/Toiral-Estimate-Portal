@@ -8,97 +8,98 @@ import {
   Globe,
   Briefcase,
   Clock,
-  ExternalLink } from
-'lucide-react';
+  ExternalLink,
+  User
+} from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { StarDoodle } from '../../components/doodles/StarDoodle';
+import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
+
 interface ClientProfileProps {
   isOpen: boolean;
   onClose: () => void;
 }
-// Mock client data
-const CLIENT_DATA = {
-  name: 'John Doe',
-  role: 'Product Director',
-  company: 'Nike',
-  email: 'john.doe@nike.com',
-  phone: '+1 (503) 671-6453',
-  location: 'Portland, Oregon',
-  avatar: 'JD',
-  memberSince: 'September 2023',
-  currentProject: {
-    name: 'E-commerce Redesign',
-    status: 'In Progress',
-    progress: 65,
-    dueDate: 'Oct 24, 2024',
-    phase: 'Frontend Development'
-  }
-};
+
 const TOIRAL_INFO = {
   tagline: 'Crafting Digital Experiences',
   description:
-  'Toiral is a boutique web development agency specializing in creating beautiful, functional websites and applications. We combine thoughtful design with robust engineering to deliver products that users love.',
+    'Toiral is a boutique web development agency specializing in creating beautiful, functional websites and applications. We combine thoughtful design with robust engineering to deliver products that users love.',
   services: [
-  'Web Development',
-  'UI/UX Design',
-  'Product Strategy',
-  'Technical Consulting'],
-
+    'Web Development',
+    'UI/UX Design',
+    'Product Strategy',
+    'Technical Consulting'
+  ],
   website: 'www.toiral.com',
   email: 'hello@toiral.com',
   phone: '+1 (555) 123-4567'
 };
+
 export function ClientProfile({ isOpen, onClose }: ClientProfileProps) {
+  const { clientSession } = useAuth();
+  const { getProjectsByClientId } = useData();
   const logoUrl = "/ChatGPT_Image_Apr_22,_2025,_02_48_04_AM_(1).png";
+
+  // Get client data from session
+  const client = clientSession?.client;
+  
+  // Get client's projects
+  const clientProjects = client ? getProjectsByClientId(client.id) : [];
+  const currentProject = clientProjects[0]; // Get first active project
+
+  // Format date
+  const formatMemberSince = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (!client) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
-      {isOpen &&
-      <>
+      {isOpen && (
+        <>
           {/* Backdrop */}
           <motion.div
-          initial={{
-            opacity: 0
-          }}
-          animate={{
-            opacity: 1
-          }}
-          exit={{
-            opacity: 0
-          }}
-          onClick={onClose}
-          className="fixed inset-0 bg-toiral-dark/40 backdrop-blur-sm z-40" />
-
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-toiral-dark/40 backdrop-blur-sm z-40"
+          />
 
           {/* Slide-out Panel */}
           <motion.div
-          initial={{
-            x: '100%'
-          }}
-          animate={{
-            x: 0
-          }}
-          exit={{
-            x: '100%'
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 300,
-            damping: 30
-          }}
-          className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto">
-
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto"
+          >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-toiral-dark text-white p-6 border-b border-toiral-primary/20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold">Profile</h2>
                 <button
-                onClick={onClose}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors">
-
+                  onClick={onClose}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -106,16 +107,16 @@ export function ClientProfile({ isOpen, onClose }: ClientProfileProps) {
               {/* Profile Header */}
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-2xl bg-toiral-primary flex items-center justify-center text-3xl font-bold text-white shadow-lg">
-                  {CLIENT_DATA.avatar}
+                  {getInitials(client.name)}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">{CLIENT_DATA.name}</h3>
+                  <h3 className="text-xl font-bold">{client.name}</h3>
                   <p className="text-toiral-light text-sm">
-                    {CLIENT_DATA.role}
+                    {client.companyName || 'Client'}
                   </p>
-                  <p className="text-toiral-secondary text-sm font-medium">
-                    {CLIENT_DATA.company}
-                  </p>
+                  <Badge variant="success" className="mt-1">
+                    {client.status}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -134,94 +135,104 @@ export function ClientProfile({ isOpen, onClose }: ClientProfileProps) {
                   <div className="flex items-center gap-3 text-gray-600">
                     <Mail className="w-4 h-4 text-gray-400" />
                     <a
-                    href={`mailto:${CLIENT_DATA.email}`}
-                    className="hover:text-toiral-primary transition-colors">
-
-                      {CLIENT_DATA.email}
+                      href={`mailto:${client.email}`}
+                      className="hover:text-toiral-primary transition-colors"
+                    >
+                      {client.email}
                     </a>
                   </div>
                   <div className="flex items-center gap-3 text-gray-600">
                     <Phone className="w-4 h-4 text-gray-400" />
                     <a
-                    href={`tel:${CLIENT_DATA.phone}`}
-                    className="hover:text-toiral-primary transition-colors">
-
-                      {CLIENT_DATA.phone}
+                      href={`tel:${client.phone}`}
+                      className="hover:text-toiral-primary transition-colors"
+                    >
+                      {client.phone}
                     </a>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    {CLIENT_DATA.location}
-                  </div>
+                  {client.companyName && (
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <Briefcase className="w-4 h-4 text-gray-400" />
+                      {client.companyName}
+                    </div>
+                  )}
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
                   Member since{' '}
                   <span className="font-semibold text-toiral-dark">
-                    {CLIENT_DATA.memberSince}
+                    {formatMemberSince(client.createdAt)}
+                  </span>
+                </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  Access Code:{' '}
+                  <span className="font-mono font-bold text-toiral-primary">
+                    {client.accessCode}
                   </span>
                 </div>
               </Card>
 
               {/* Current Project */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-toiral-bg to-white">
-                <StarDoodle
-                className="absolute top-2 right-2 opacity-20"
-                size={40} />
-
-                <h3 className="font-bold text-toiral-dark mb-4 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-toiral-primary/10 flex items-center justify-center">
-                    <Briefcase className="w-4 h-4 text-toiral-primary" />
-                  </div>
-                  Current Project
-                </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-toiral-dark">
-                        {CLIENT_DATA.currentProject.name}
-                      </h4>
-                      <Badge variant="info">
-                        {CLIENT_DATA.currentProject.status}
-                      </Badge>
+              {currentProject ? (
+                <Card className="relative overflow-hidden bg-gradient-to-br from-toiral-bg to-white">
+                  <StarDoodle
+                    className="absolute top-2 right-2 opacity-20"
+                    size={40}
+                  />
+                  <h3 className="font-bold text-toiral-dark mb-4 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-toiral-primary/10 flex items-center justify-center">
+                      <Briefcase className="w-4 h-4 text-toiral-primary" />
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Current Phase:{' '}
-                      <span className="font-semibold text-toiral-primary">
-                        {CLIENT_DATA.currentProject.phase}
-                      </span>
-                    </p>
-                  </div>
+                    Current Project
+                  </h3>
 
-                  <ProgressBar
-                  progress={CLIENT_DATA.currentProject.progress}
-                  label="Overall Progress" />
-
-
-                  <div className="flex items-center justify-between text-sm pt-2">
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <Clock className="w-4 h-4" />
-                      Due {CLIENT_DATA.currentProject.dueDate}
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-toiral-dark">
+                          {currentProject.name}
+                        </h4>
+                        <Badge variant="info">{currentProject.status}</Badge>
+                      </div>
+                      {currentProject.description && (
+                        <p className="text-sm text-gray-600 mb-3">
+                          {currentProject.description}
+                        </p>
+                      )}
                     </div>
-                    <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-toiral-primary h-8">
 
-                      View Details →
-                    </Button>
+                    <ProgressBar
+                      progress={currentProject.progress}
+                      label="Overall Progress"
+                    />
+
+                    <div className="flex items-center justify-between text-sm pt-2">
+                      {currentProject.dueDate && (
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Clock className="w-4 h-4" />
+                          Due {currentProject.dueDate}
+                        </div>
+                      )}
+                      <div className="text-gray-500">
+                        {clientProjects.length} {clientProjects.length === 1 ? 'Project' : 'Projects'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              ) : (
+                <Card className="text-center py-8">
+                  <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No active projects</p>
+                </Card>
+              )}
 
               {/* About Toiral */}
               <Card className="bg-toiral-dark text-white">
                 <div className="flex items-center gap-3 mb-4">
                   <img
-                  src={logoUrl}
-                  alt="Toiral Logo"
-                  className="w-10 h-10 object-contain" />
-
+                    src={logoUrl}
+                    alt="Toiral Logo"
+                    className="w-10 h-10 object-contain"
+                  />
                   <div>
                     <h3 className="font-bold text-lg">Toiral</h3>
                     <p className="text-toiral-light text-xs">
@@ -239,58 +250,48 @@ export function ClientProfile({ isOpen, onClose }: ClientProfileProps) {
                     Our Services
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {TOIRAL_INFO.services.map((service, i) =>
-                  <span
-                    key={i}
-                    className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-white">
-
+                    {TOIRAL_INFO.services.map((service, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-white"
+                      >
                         {service}
                       </span>
-                  )}
+                    ))}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-white/10 space-y-2 text-sm">
                   <a
-                  href={`https://${TOIRAL_INFO.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-toiral-light hover:text-white transition-colors">
-
+                    href={`https://${TOIRAL_INFO.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-toiral-light hover:text-white transition-colors"
+                  >
                     <Globe className="w-4 h-4" />
                     {TOIRAL_INFO.website}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                   <a
-                  href={`mailto:${TOIRAL_INFO.email}`}
-                  className="flex items-center gap-2 text-toiral-light hover:text-white transition-colors">
-
+                    href={`mailto:${TOIRAL_INFO.email}`}
+                    className="flex items-center gap-2 text-toiral-light hover:text-white transition-colors"
+                  >
                     <Mail className="w-4 h-4" />
                     {TOIRAL_INFO.email}
                   </a>
                   <a
-                  href={`tel:${TOIRAL_INFO.phone}`}
-                  className="flex items-center gap-2 text-toiral-light hover:text-white transition-colors">
-
+                    href={`tel:${TOIRAL_INFO.phone}`}
+                    className="flex items-center gap-2 text-toiral-light hover:text-white transition-colors"
+                  >
                     <Phone className="w-4 h-4" />
                     {TOIRAL_INFO.phone}
                   </a>
                 </div>
               </Card>
-
-              {/* Actions */}
-              <div className="space-y-3 pt-2">
-                <Button variant="outline" className="w-full">
-                  Edit Profile
-                </Button>
-                <Button variant="ghost" className="w-full text-gray-500">
-                  Privacy Settings
-                </Button>
-              </div>
             </div>
           </motion.div>
         </>
-      }
-    </AnimatePresence>);
-
+      )}
+    </AnimatePresence>
+  );
 }
