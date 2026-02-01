@@ -44,81 +44,10 @@ import { Select } from '../../components/ui/Select';
 import { StarDoodle } from '../../components/doodles/StarDoodle';
 import { MorphLoading } from '../../components/ui/MorphLoading';
 import { useData } from '../../contexts/DataContext';
-const INITIAL_PHASES = [
-{
-  name: 'Planning',
-  status: 'Completed',
-  date: 'Sep 15',
-  progress: 100
-},
-{
-  name: 'Design',
-  status: 'Completed',
-  date: 'Oct 01',
-  progress: 100
-},
-{
-  name: 'Development',
-  status: 'In Progress',
-  date: 'Oct 20',
-  progress: 65
-},
-{
-  name: 'Testing',
-  status: 'Pending',
-  date: '-',
-  progress: 0
-},
-{
-  name: 'Launch',
-  status: 'Pending',
-  date: '-',
-  progress: 0
-}];
-
-const INITIAL_COSTS = [
-{
-  id: 1,
-  item: 'UX/UI Design',
-  desc: 'Complete design phase',
-  cost: 12000
-},
-{
-  id: 2,
-  item: 'Frontend Dev',
-  desc: 'React implementation',
-  cost: 18000
-},
-{
-  id: 3,
-  item: 'Backend Dev',
-  desc: 'API & Database',
-  cost: 15000
-}];
-
-const PROJECT_PLAN = {
-  objective:
-  'Complete redesign of Nike e-commerce platform with modern UX/UI, improved performance, and seamless checkout experience.',
-  scope: [
-  'User research and persona development',
-  'Information architecture and wireframing',
-  'High-fidelity UI design system',
-  'Responsive frontend development (React + TypeScript)',
-  'Backend API integration',
-  'Payment gateway integration',
-  'QA testing and bug fixes'],
-
-  deliverables: [
-  'Design system documentation',
-  'Figma design files',
-  'Fully functional web application',
-  'Admin dashboard',
-  'Technical documentation'],
-
-  timeline: '12 weeks',
-  team: ['Alex Morgan (PM)', 'Sam Wilson (Dev Lead)', 'Jordan Lee (Designer)']
-};
 export function ClientProfile() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { getClientById, getProjectsByClientId, getInvoicesByClientId, clientsLoading, projectsLoading } = useData();
   const [activeTab, setActiveTab] = useState('overview');
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isEditPhaseModalOpen, setIsEditPhaseModalOpen] = useState(false);
