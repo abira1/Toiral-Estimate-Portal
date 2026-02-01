@@ -59,76 +59,42 @@ export function ClientProfile() {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const tabs = [
-  {
-    id: 'overview',
-    label: 'Overview'
-  },
-  {
-    id: 'phases',
-    label: 'Project Phases'
-  },
-  {
-    id: 'financials',
-    label: 'Financials'
-  },
-  {
-    id: 'documents',
-    label: 'Documents'
-  },
-  {
-    id: 'notes',
-    label: 'Notes & Logs'
-  }];
+    { id: 'overview', label: 'Overview' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'invoices', label: 'Invoices' }
+  ];
 
-  const handleUpdatePhase = (index: number, field: string, value: any) => {
-    const updated = [...phases];
-    updated[index] = {
-      ...updated[index],
-      [field]: value
-    };
-    setPhases(updated);
-  };
-  const handleAddCost = () => {
-    if (newCost.item && newCost.cost) {
-      setCosts([
-      ...costs,
-      {
-        id: Date.now(),
-        item: newCost.item,
-        desc: newCost.desc,
-        cost: parseFloat(newCost.cost)
-      }]
-      );
-      setNewCost({
-        item: '',
-        desc: '',
-        cost: ''
-      });
-      setIsAddCostModalOpen(false);
-    }
-  };
-  const handleDeleteCost = (id: number) => {
-    setCosts(costs.filter((c) => c.id !== id));
-  };
-  const handleProfileImageSelect = (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setTempProfileImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-  const handleSaveProfileImage = () => {
-    if (tempProfileImage) {
-      setProfileImage(tempProfileImage);
-    }
-    setIsProfileImageModalOpen(false);
-    setTempProfileImage(null);
-  };
-  const handleRemoveProfileImage = () => {
-    setProfileImage(null);
-    setTempProfileImage(null);
-  };
-  const totalCost = costs.reduce((sum, item) => sum + item.cost, 0);
+  // Show loading
+  if (clientsLoading || projectsLoading) {
+    return (
+      <DashboardLayout userRole="admin">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <MorphLoading />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show error if client not found
+  if (!client) {
+    return (
+      <DashboardLayout userRole="admin">
+        <div className="text-center py-12">
+          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">Client Not Found</h2>
+          <p className="text-gray-500 mb-6">The client you're looking for doesn't exist.</p>
+          <Button onClick={() => navigate('/admin/clients')}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Clients
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Calculate stats
+  const totalSpent = clientInvoices
+    .filter(inv => inv.status === 'Paid')
+    .reduce((sum, inv) => sum + inv.amount, 0);
   return (
     <DashboardLayout userRole="admin">
       <div className="space-y-6 md:space-y-8 pb-20">
