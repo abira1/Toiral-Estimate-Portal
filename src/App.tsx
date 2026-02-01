@@ -54,6 +54,7 @@ export function App() {
 
             {/* Client Routes */}
             <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/client/my-project" element={<MyProject />} />
             <Route path="/client/quotation/:id" element={<QuotationReview />} />
             <Route path="/client/reports" element={<Reports />} />
             <Route
