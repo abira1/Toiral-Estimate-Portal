@@ -147,10 +147,11 @@ export function ClientDashboard() {
             <div className="flex flex-wrap gap-4">
               <Button
                 variant="outline"
-                onClick={() => navigate(`/client/project/${project.id}`)}
-                className="bg-white !text-toiral-dark hover:!bg-toiral-light border-white shadow-soft">
+                onClick={() => navigate('/client/my-project')}
+                className="bg-white !text-toiral-dark hover:!bg-toiral-light border-white shadow-soft"
+                data-testid="view-my-project-btn">
 
-                View Timeline
+                View My Project
               </Button>
               <Button
                 variant="outline"
