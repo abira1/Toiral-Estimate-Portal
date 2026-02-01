@@ -76,22 +76,42 @@ export const clientService = {
       // Save access code mapping for quick lookup
       await set(ref(database, `accessCodes/${accessCode}`), { clientId });
 
-      // Create initial project if project name provided
+      // Create initial project with enhanced data
       if (formData.projectName) {
         const projectId = generateId();
+        
+        // Determine the project category
+        const projectCategory = formData.projectCategory === 'Custom' && formData.customCategory
+          ? formData.projectCategory
+          : formData.projectCategory;
+
         const project: Project = {
           id: projectId,
           clientId,
           name: formData.projectName,
-          description: '',
+          category: projectCategory,
+          customCategory: formData.customCategory,
+          description: formData.projectOverview || '',
+          overview: formData.projectOverview || '',
           status: 'Planning',
           progress: 0,
           startDate: new Date().toISOString().split('T')[0],
-          dueDate: '',
-          budget: 0,
+          dueDate: formData.phases.length > 0 
+            ? formData.phases[formData.phases.length - 1].endDate 
+            : '',
+          budget: formData.financial.totalCost,
           teamIds: formData.team,
+          
+          // Enhanced fields
+          phases: formData.phases,
+          financial: formData.financial,
+          notes: formData.initialNotes,
+          documentLinks: [],
+          
+          // Legacy fields for backward compatibility
           milestones: [],
           documents: [],
+          
           createdAt: now,
           updatedAt: now
         };
