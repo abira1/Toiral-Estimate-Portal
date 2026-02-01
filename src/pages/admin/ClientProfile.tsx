@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building,
@@ -26,7 +27,9 @@ import {
   Users,
   Layers,
   Camera,
-  Upload } from
+  Upload,
+  ArrowLeft,
+  Loader2 } from
 'lucide-react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Card } from '../../components/ui/Card';
@@ -39,27 +42,8 @@ import { FileUpload } from '../../components/ui/FileUpload';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
 import { StarDoodle } from '../../components/doodles/StarDoodle';
-// Mock Data
-const CLIENT_DATA = {
-  id: '1',
-  name: 'Nike',
-  industry: 'Sportswear & Retail',
-  status: 'Active',
-  website: 'www.nike.com',
-  since: 'Sep 2023',
-  avatar: 'N',
-  contact: {
-    name: 'John Doe',
-    role: 'Product Director',
-    email: 'john.doe@nike.com',
-    phone: '+1 (503) 671-6453',
-    address: 'One Bowerman Drive, Beaverton, OR 97005'
-  },
-  stats: {
-    totalSpent: '$145,000',
-    activeProjects: 3
-  }
-};
+import { MorphLoading } from '../../components/ui/MorphLoading';
+import { useData } from '../../contexts/DataContext';
 const INITIAL_PHASES = [
 {
   name: 'Planning',
