@@ -26,8 +26,9 @@ import { useData } from '../../contexts/DataContext';
 export function ProjectDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getProjectById, getClientById, teamMembers, projectsLoading } = useData();
+  const { getProjectById, getClientById, teamMembers, projectsLoading, updateProject } = useData();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showEditor, setShowEditor] = useState(false);
 
   // Get project and client data
   const project = id ? getProjectById(id) : undefined;
