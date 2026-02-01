@@ -56,6 +56,12 @@ export interface FinancialDetails {
   paymentMilestones: PaymentMilestone[];
   totalPaid: number;
   balance: number;
+  // Payment approval workflow
+  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'change_requested';
+  changeRequest?: string;
+  approvedAt?: number;
+  rejectedAt?: number;
+  changeRequestedAt?: number;
 }
 
 // Note/Log Types
