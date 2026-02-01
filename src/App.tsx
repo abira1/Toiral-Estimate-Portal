@@ -20,6 +20,7 @@ import { Invoices } from './pages/admin/Invoices';
 import { Settings } from './pages/admin/Settings';
 import { QuotationReview } from './pages/client/QuotationReview';
 import { Reports } from './pages/client/Reports';
+import { MyProject } from './pages/client/MyProject';
 import { ProjectTracking } from './pages/ProjectTracking';
 import { Notifications } from './pages/Notifications';
 import { LoadingDemo } from './pages/LoadingDemo';
