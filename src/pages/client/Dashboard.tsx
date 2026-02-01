@@ -281,11 +281,12 @@ export function ClientDashboard() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate(`/client/project/${project.id}`)}
-              className="h-auto py-6 flex flex-col gap-2 items-center justify-center border-dashed">
+              onClick={() => navigate('/client/my-project')}
+              className="h-auto py-6 flex flex-col gap-2 items-center justify-center border-dashed"
+              data-testid="view-full-project-btn">
 
               <CheckCircle className="w-6 h-6" />
-              <span>View Project</span>
+              <span>View Full Project</span>
             </Button>
             <Button
               variant="outline"
