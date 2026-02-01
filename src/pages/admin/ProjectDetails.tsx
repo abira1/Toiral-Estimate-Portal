@@ -323,6 +323,18 @@ export function ProjectDetails() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Project Editor Modal */}
+      {showEditor && project && (
+        <ProjectEditor
+          project={project}
+          onSave={async (updates) => {
+            await updateProject(project.id, updates);
+          }}
+          onClose={() => setShowEditor(false)}
+          allTeamMembers={teamMembers}
+        />
+      )}
     </DashboardLayout>
   );
 }
