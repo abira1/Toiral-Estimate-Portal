@@ -48,22 +48,16 @@ export function ClientProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getClientById, getProjectsByClientId, getInvoicesByClientId, clientsLoading, projectsLoading } = useData();
+  
+  // Get real data from Firebase
+  const client = id ? getClientById(id) : undefined;
+  const clientProjects = client ? getProjectsByClientId(client.id) : [];
+  const clientInvoices = client ? getInvoicesByClientId(client.id) : [];
+  const activeProject = clientProjects[0]; // Get first project for display
+
   const [activeTab, setActiveTab] = useState('overview');
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
-  const [isEditPhaseModalOpen, setIsEditPhaseModalOpen] = useState(false);
-  const [isAddCostModalOpen, setIsAddCostModalOpen] = useState(false);
-  const [isEditPlanModalOpen, setIsEditPlanModalOpen] = useState(false);
-  const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
-  const [selectedPhase, setSelectedPhase] = useState<any>(null);
-  const [phases, setPhases] = useState(INITIAL_PHASES);
-  const [costs, setCosts] = useState(INITIAL_COSTS);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [tempProfileImage, setTempProfileImage] = useState<string | null>(null);
-  const [newCost, setNewCost] = useState({
-    item: '',
-    desc: '',
-    cost: ''
-  });
   const tabs = [
   {
     id: 'overview',
