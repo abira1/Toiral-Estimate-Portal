@@ -20,6 +20,7 @@ import { ProgressBar } from '../../components/ui/ProgressBar';
 import { FileUpload } from '../../components/ui/FileUpload';
 import { TeamMemberCard } from '../../components/ui/TeamMemberCard';
 import { MorphLoading } from '../../components/ui/MorphLoading';
+import { ProjectEditor } from '../../components/admin/ProjectEditor';
 import { useData } from '../../contexts/DataContext';
 
 export function ProjectDetails() {
