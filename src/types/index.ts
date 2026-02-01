@@ -137,15 +137,27 @@ export interface Project {
   id: string;
   clientId: string;
   name: string;
+  category: ProjectCategory;
+  customCategory?: string;
   description: string;
+  overview: string;
   status: ProjectStatus;
   progress: number;
   startDate: string;
   dueDate: string;
   budget: number;
   teamIds: string[];
+  
+  // Enhanced fields
+  phases: Phase[];
+  financial: FinancialDetails;
+  notes: Note[];
+  documentLinks: DocumentLink[];
+  
+  // Legacy fields (keep for backward compatibility)
   milestones: Milestone[];
   documents: ProjectDocument[];
+  
   createdAt: number;
   updatedAt: number;
 }
