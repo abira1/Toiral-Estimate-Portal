@@ -113,7 +113,9 @@ export function ProjectDetails() {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline">Edit Project</Button>
+              <Button variant="outline" onClick={() => setShowEditor(true)} data-testid="edit-project-btn">
+                Edit Project
+              </Button>
               <Button>Update Status</Button>
             </div>
           </div>
