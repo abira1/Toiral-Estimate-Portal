@@ -16,12 +16,96 @@ export interface Client {
   updatedAt: number;
 }
 
+// Project Category Types
+export type ProjectCategory = 
+  | 'Website Development'
+  | 'Mobile App'
+  | 'E-commerce'
+  | 'Branding'
+  | 'Marketing'
+  | 'UI/UX Design'
+  | 'Custom';
+
+// Phase Types
+export interface Phase {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: 'Not Started' | 'In Progress' | 'Completed' | 'Delayed';
+  deliverables: string;
+  description?: string;
+}
+
+// Payment Milestone Types
+export interface PaymentMilestone {
+  id: string;
+  name: string;
+  percentage: number;
+  amount: number;
+  dueDate: string;
+  status: 'Pending' | 'Paid' | 'Overdue';
+  paidDate?: string;
+  notes?: string;
+}
+
+// Financial Details
+export interface FinancialDetails {
+  totalCost: number;
+  currency: string;
+  paymentMilestones: PaymentMilestone[];
+  totalPaid: number;
+  balance: number;
+}
+
+// Note/Log Types
+export type NoteCategory = 'Client Decision' | 'Technical Note' | 'Meeting Note' | 'General Update';
+
+export interface Note {
+  id: string;
+  category: NoteCategory;
+  content: string;
+  createdAt: number;
+  createdBy: string;
+  updatedAt?: number;
+}
+
+// Document Link Types
+export type DocumentType = 'Screenshot' | 'Quotation' | 'Invoice' | 'Contract' | 'Other';
+
+export interface DocumentLink {
+  id: string;
+  type: DocumentType;
+  name: string;
+  url: string;
+  uploadedAt: number;
+  uploadedBy: string;
+  notes?: string;
+}
+
 export interface ClientFormData {
+  // Client Info
   clientName: string;
   companyName: string;
   email: string;
   phone: string;
+  
+  // Project Details
   projectName: string;
+  projectCategory: ProjectCategory;
+  customCategory?: string;
+  projectOverview: string;
+  
+  // Timeline & Phases
+  phases: Phase[];
+  
+  // Financial
+  financial: FinancialDetails;
+  
+  // Notes
+  initialNotes: Note[];
+  
+  // Team
   team: string[];
 }
 
